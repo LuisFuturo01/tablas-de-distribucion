@@ -59,11 +59,25 @@
 .dark .stats-table tbody tr:hover td { background-color: var(--color-indigo-900) !important; color: white !important; }
 .dark .stats-table td:hover { background-color: var(--color-indigo-700) !important; }
 
+/* Selector de distribución (lista desplegable) */
+.table-select {
+    appearance: auto;
+    background-image: none;
+}
+
+.result-math .katex {
+    font-size: 1.05em;
+}
+
 /* Desgloses (Mini tableros) */
 .breakdown-table th, .breakdown-table td {
     border: 1px solid var(--color-slate-300);
     padding: 0.2rem 0.5rem;
     text-align: center;
+}
+
+.breakdown-table .tab-num {
+    font-variant-numeric: tabular-nums;
 }
 .dark .breakdown-table th, .dark .breakdown-table td { border-color: var(--color-slate-600); }
 
@@ -73,6 +87,16 @@
 @media print {
     @page { size: landscape; margin: 0.8cm; }
     
+    html {
+        color-scheme: light !important;
+    }
+
+    html.dark,
+    html.dark body { 
+        background: white !important; 
+        color: black !important;
+    }
+
     body { 
         background: white !important; 
         color: black !important;
@@ -81,12 +105,44 @@
         -webkit-print-color-adjust: exact !important; 
         print-color-adjust: exact !important; 
     }
+
+    /* Forzar apariencia clara aunque quede .dark (p. ej. si el PDF ignora beforeprint) */
+    html.dark .bg-white,
+    html.dark .bg-slate-50,
+    html.dark .bg-slate-100,
+    html.dark [class*="bg-slate-8"],
+    html.dark [class*="dark:bg-"] {
+        background-color: white !important;
+        background-image: none !important;
+    }
+
+    html.dark .text-slate-800,
+    html.dark .text-slate-700,
+    html.dark h1,
+    html.dark p,
+    html.dark span:not(.katex *) {
+        color: black !important;
+    }
+
+    html.dark .stats-table tbody tr:nth-child(even),
+    html.dark .stats-table tbody tr:nth-child(odd),
+    html.dark .stats-table tbody td {
+        background-color: transparent !important;
+        color: black !important;
+    }
+
+    html.dark .stats-table thead th,
+    html.dark .stats-table tbody th {
+        background-color: #e2e8f0 !important;
+        color: black !important;
+        border-color: #94a3b8 !important;
+    }
     
     .no-print { display: none !important; }
     
-    /* Mostrar imágenes en impresión pero ultra-minimizadas y compactas */
-    #imageContainer { margin-top: 5px !important; margin-bottom: 5px !important; gap: 10px !important; justify-content: center !important; }
-    #imageContainer img { height: 50px !important; border: 1px solid #ccc !important; padding: 2px !important; shadow: none !important; }
+    /* Imágenes en impresión: tamaño visible en papel */
+    #imageContainer { margin-top: 8px !important; margin-bottom: 10px !important; gap: 16px !important; justify-content: center !important; }
+    #imageContainer img { height: 118px !important; max-height: 34mm !important; min-height: 28mm !important; width: auto !important; border: 1px solid #ccc !important; padding: 4px !important; box-shadow: none !important; }
     
     .grid { 
         display: flex !important; 
