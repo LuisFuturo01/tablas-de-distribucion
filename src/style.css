@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* Fix global para Tailwind v4 Dark Mode dependiente de clase */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Ajustes Base */
+@theme {
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+}
+
+/* 
+ * Colores intercalados más marcados para Web e Impresión 
+ */
+.stats-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.stats-table th, .stats-table td {
+    border-bottom: 1px solid var(--color-gray-200);
+    border-right: 1px solid var(--color-gray-200);
+}
+
+.stats-table tbody tr:nth-child(even) { background-color: #f1f5f9; }
+.stats-table tbody tr:nth-child(odd) { background-color: #ffffff; }
+
+.stats-table tbody td:nth-child(even) { background-color: rgba(6, 182, 212, 0.06); }
+.stats-table tbody td:nth-child(odd) { background-color: transparent; }
+
+.stats-table tbody tr:hover td { 
+    background-color: var(--color-primary-100) !important; 
+    color: var(--color-primary-700);
+}
+.stats-table td:hover { 
+    background-color: var(--color-primary-200) !important; 
+    font-weight: 700;
+}
+
+/* Fix interno */
+.table-wrapper {
+    min-height: 0; 
+    flex: 1 1 auto;
+    overflow: hidden; 
+}
+
+/* Dark Mode Overrides globales y de tabla */
+.dark .stats-table tbody tr:nth-child(even) { background-color: #1e293b; }
+.dark .stats-table tbody tr:nth-child(odd) { background-color: #0f172a; }
+.dark .stats-table tbody td:nth-child(even) { background-color: rgba(56, 189, 248, 0.08); }
+.dark .stats-table tbody td:nth-child(odd) { background-color: transparent; }
+.dark .stats-table th, .dark .stats-table td { border-color: var(--color-gray-700); }
+.dark .stats-table thead th { background-color: var(--color-gray-800); color: white; border-bottom: 2px solid var(--color-gray-600); }
+.dark .stats-table tbody th { background-color: var(--color-slate-900); color: white; border-right: 2px solid var(--color-gray-600); }
+.dark .stats-table tbody tr:hover td { background-color: var(--color-indigo-900) !important; color: white !important; }
+.dark .stats-table td:hover { background-color: var(--color-indigo-700) !important; }
+
+/* Desgloses (Mini tableros) */
+.breakdown-table th, .breakdown-table td {
+    border: 1px solid var(--color-slate-300);
+    padding: 0.2rem 0.5rem;
+    text-align: center;
+}
+.dark .breakdown-table th, .dark .breakdown-table td { border-color: var(--color-slate-600); }
+
+/* 
+ * Reglas Estrictas de Impresión
+ */
+@media print {
+    @page { size: landscape; margin: 0.8cm; }
+    
+    body { 
+        background: white !important; 
+        color: black !important;
+        margin: 0; 
+        padding: 0; 
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+    }
+    
+    .no-print { display: none !important; }
+    
+    /* Mostrar imágenes en impresión pero ultra-minimizadas y compactas */
+    #imageContainer { margin-top: 5px !important; margin-bottom: 5px !important; gap: 10px !important; justify-content: center !important; }
+    #imageContainer img { height: 50px !important; border: 1px solid #ccc !important; padding: 2px !important; shadow: none !important; }
+    
+    .grid { 
+        display: flex !important; 
+        flex-direction: row !important; 
+        gap: 0.3cm !important; 
+        width: 100% !important;
+    }
+    
+    .table-wrapper { 
+        width: 49% !important; 
+        border: 1px solid #94a3b8 !important; 
+        box-shadow: none !important; 
+        border-radius: 0 !important;
+    }
+    
+    .table-wrapper > div.border-b {
+        padding: 1px 4px !important;
+        background-color: transparent !important;
+        border-bottom: 1px solid #000 !important;
+        font-size: 8pt !important;
+    }
+    
+    /* Espacio EXTREMO optimizado para datos (1 hoja A4 fit) */
+    .stats-table { width: 100%; font-size: 7.5pt !important; page-break-inside: avoid; }
+    .stats-table th, .stats-table td { padding: 1px 0px !important; line-height: 1 !important; border-color: #cbd5e1 !important;}
+    
+    .stats-table tr { page-break-inside: avoid; }
+    
+    header { margin-bottom: 5px !important; text-align: center !important; }
+    header h1 { font-size: 13pt !important; margin: 0 !important; color: black !important;}
+    header p { font-size: 9pt !important; margin: 0 !important; color: #475569 !important; }
+}
