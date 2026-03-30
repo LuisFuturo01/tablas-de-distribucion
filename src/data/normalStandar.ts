@@ -3,7 +3,7 @@ import type { DistTable } from '../types';
 export const normalStandardTable: DistTable = {
   name: "Tabla de Probabilidad Normal Estándar",
   description: "Valores para $P(Z \\le z)$ desde -3.4 hasta 3.4.",
-  images: ["/img/normal-left.png", "/img/normal-right.png"], // default e iterada
+  images: ["../../img/normal-left.png", "../../img/normal-right.png"],
   zMin: -3.4,
   zMax: 3.4,
   rowData: {
