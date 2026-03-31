@@ -11,7 +11,9 @@
     --color-primary-600: #2563eb;
     --color-primary-700: #1d4ed8;
 }
-
+#cacheStatus{
+    display: none;
+}
 .tabla-container{
     display: flex;
     gap: 2rem;
