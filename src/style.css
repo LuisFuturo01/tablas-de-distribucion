@@ -18,6 +18,9 @@
     width: max-content;
     justify-content: center;
 }
+.calculadora{
+    width: 100%;
+}
 /* 
  * Colores intercalados más marcados para Web e Impresión 
  */
