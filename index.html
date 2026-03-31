@@ -13,7 +13,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans p-2 md:p-4 transition-colors duration-200 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <div class="max-w-[1400px] w-full mx-auto flex-grow flex flex-col">
+    <div class="max-w-[1500px] w-full mx-auto flex-grow flex flex-col container-full">
         
         <!-- Controles Top -->
         <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 no-print border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -43,6 +43,7 @@
         <header class="mb-4 text-center md:text-left">
             <h1 id="tableTitle" class="text-3xl md:text-4xl font-extrabold text-indigo-900 dark:text-indigo-400 tracking-tight">Cargando Tabla...</h1>
             <p id="tableDesc" class="text-slate-600 dark:text-slate-400 mt-2 text-lg">...</p>
+            <p id="cacheStatus" class="text-xs text-slate-500 dark:text-slate-400 mt-1 min-h-[1.1rem]"></p>
             
             <div id="imageContainer" class="mt-4 xl:mt-6 flex flex-wrap gap-8 items-center justify-center w-full">
                 <img id="img1" src="/img/espera.webp" alt="Ilustración Principal" class="h-44 md:h-52 xl:h-60 max-w-full object-contain rounded-xl shadow-sm bg-white dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700 mx-auto">
@@ -51,27 +52,31 @@
         </header>
 
         <!-- Tabla Dividida -->
-        <div class="mb-4 xl:mb-8 w-full transition-colors duration-200">
+        <div class="mb-4 xl:mb-8 w-full transition-colors duration-200 tabla-container">
             <div class="grid lg:grid-cols-2 gap-4 lg:gap-6 xl:gap-8 items-start w-full">
                 
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col table-wrapper h-full">
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span class="font-bold text-slate-700 dark:text-slate-300">Parte Z [-]</span>
                     </div>
-                    <table class="stats-table text-[13px] w-full" id="zTableLeft">
+                    <div class="overflow-x-auto w-full">
+                        <table class="stats-table text-[13px] w-full" id="zTableLeft">
                         <thead><tr id="tableHeaderRowLeft"></tr></thead>
                         <tbody id="tableBodyLeft"></tbody>
                     </table>
+                    </div>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col table-wrapper h-full">
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span class="font-bold text-slate-700 dark:text-slate-300">Parte Z [+]</span>
                     </div>
-                    <table class="stats-table text-[13px] w-full" id="zTableRight">
+                    <div class="overflow-x-auto w-full">
+                        <table class="stats-table text-[13px] w-full" id="zTableRight">
                         <thead><tr id="tableHeaderRowRight"></tr></thead>
                         <tbody id="tableBodyRight"></tbody>
-                    </table>
+                        </table>
+                    </div>
                 </div>
 
             </div>

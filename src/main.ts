@@ -1,5 +1,61 @@
 import type { DistTable } from './types';
 
+type CachedTables = {
+    version: number;
+    selectedKey: string | null;
+    tableHashes: Record<string, string>;
+    lastUpdated: string;
+};
+
+const CACHE_KEY = 'tablasDistribucionCache_v1';
+const CACHE_VERSION = 1;
+
+function readLocalCache(): CachedTables | null {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as CachedTables;
+        if (!parsed || parsed.version !== CACHE_VERSION) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function writeLocalCache(state: CachedTables): void {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(state));
+    } catch {
+        // Ignores localStorage failures (e.g., incognito / quotas).
+    }
+}
+
+function computeTableHash(table: DistTable): string {
+    const payload = JSON.stringify({ name: table.name, description: table.description, rows: table.rowData });
+    return btoa(unescape(encodeURIComponent(payload)));
+}
+
+function updateCacheStatus(message: string, isError = false): void {
+    const el = document.getElementById('cacheStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle('text-red-500', isError);
+    el.classList.toggle('text-slate-500', !isError);
+}
+
+function persistCacheSelection(tableKey: string, table: DistTable): void {
+    const stored = readLocalCache() || {
+        version: CACHE_VERSION,
+        selectedKey: tableKey,
+        tableHashes: {},
+        lastUpdated: new Date().toISOString(),
+    };
+    stored.selectedKey = tableKey;
+    stored.tableHashes[tableKey] = computeTableHash(table);
+    stored.lastUpdated = new Date().toISOString();
+    writeLocalCache(stored);
+}
+
 const modules: Record<string, unknown> = import.meta.glob('./data/*.ts', { eager: true });
 const tables: Record<string, DistTable> = {};
 
@@ -76,23 +132,34 @@ function buildTableSelector(): void {
     });
     sel.addEventListener('change', () => {
         const v = sel.value;
-        if (v && tables[v]) loadTableData(tables[v]);
+        if (v && tables[v]) loadTableData(v, tables[v]);
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     buildTableSelector();
     const sel = document.getElementById('tableSelector') as HTMLSelectElement;
-    const firstKey = Object.keys(tables)[0];
-    if (firstKey && sel) {
-        sel.value = firstKey;
-        loadTableData(tables[firstKey]);
+    const cached = readLocalCache();
+
+    const safeKey = cached?.selectedKey && tables[cached.selectedKey] ? cached.selectedKey : Object.keys(tables)[0];
+    if (safeKey && sel) {
+        sel.value = safeKey;
+        loadTableData(safeKey, tables[safeKey]);
     }
+
     setupEvents();
+
+    if (navigator.onLine) {
+        setTimeout(() => runBackgroundSync(), 500);
+    } else {
+        updateCacheStatus('Modo fuera de línea: usando datos del caché o seleccione una tabla.', false);
+    }
 });
 
-function loadTableData(table: DistTable): void {
+function loadTableData(tableKey: string, table: DistTable): void {
     currentTable = table;
+    persistCacheSelection(tableKey, table);
+    updateCacheStatus(`Tabla cargada: ${table.name} (caché sincronizada)`, false);
 
     document.getElementById('tableTitle')!.textContent = currentTable.name;
     const descEl = document.getElementById('tableDesc')!;
@@ -173,6 +240,40 @@ function renderTable(): void {
             tbodyR.appendChild(row);
         }
     });
+}
+
+function runBackgroundSync(): void {
+    const cached = readLocalCache();
+    if (!navigator.onLine) {
+        updateCacheStatus('Offline: la sincronización en segundo plano se omitió.');
+        return;
+    }
+
+    updateCacheStatus('Sincronización en segundo plano iniciada...');
+
+    const newState: CachedTables = cached || {
+        version: CACHE_VERSION,
+        selectedKey: Object.keys(tables)[0] || null,
+        tableHashes: {},
+        lastUpdated: new Date().toISOString(),
+    };
+
+    let changed = false;
+    Object.entries(tables).forEach(([key, table]) => {
+        const hash = computeTableHash(table);
+        if (newState.tableHashes[key] !== hash) {
+            newState.tableHashes[key] = hash;
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        newState.lastUpdated = new Date().toISOString();
+        writeLocalCache(newState);
+        updateCacheStatus('Sincronización completa: el caché se ha actualizado.');
+    } else {
+        updateCacheStatus('Sincronización completa: los datos del caché ya estaban al día.');
+    }
 }
 
 function setResultP(text: string): void {
