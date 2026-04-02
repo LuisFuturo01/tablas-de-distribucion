@@ -9,8 +9,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-  <script type="module" crossorigin src="/assets/index-BnCwR-8_.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DKbJDSkk.css">
+
+
+  <script type="module" crossorigin src="/assets/index-CBr03Y8R.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BMOv0o49.css">
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans p-2 md:p-4 transition-colors duration-200 dark:bg-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
@@ -34,6 +36,10 @@
                     <svg id="icon-moon" class="w-5 h-5 text-slate-600 dark:text-slate-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     <span id="darkText" class="text-slate-700 dark:text-slate-300">Modo Oscuro</span>
                 </button>
+                <button id="btnDownloadPdf" class="bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md px-4 py-2 rounded-lg shadow-sm text-sm font-semibold flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Descargar PDF</span>
+                </button>
                 <button onclick="window.print()" class="bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md px-4 py-2 rounded-lg shadow-sm text-sm font-semibold flex items-center gap-2 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     <span>Imprimir</span>
@@ -54,28 +60,28 @@
 
         <!-- Tabla Dividida -->
         <div class="mb-4 xl:mb-8 w-full transition-colors duration-200 tabla-container">
-            <div class="grid lg:grid-cols-2 gap-4 lg:gap-6 xl:gap-8 items-start w-full">
+            <div class="tabla-container-tab">
                 
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col table-wrapper h-full">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 flex flex-col table-wrapper">
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span class="font-bold text-slate-700 dark:text-slate-300">Parte Z [-]</span>
                     </div>
                     <div class="overflow-x-auto w-full">
-                        <table class="stats-table text-[13px] w-full" id="zTableLeft">
-                        <thead><tr id="tableHeaderRowLeft"></tr></thead>
-                        <tbody id="tableBodyLeft"></tbody>
-                    </table>
+                        <table class="stats-table" id="zTableLeft">
+                            <thead><tr id="tableHeaderRowLeft"></tr></thead>
+                            <tbody id="tableBodyLeft"></tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col table-wrapper h-full">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 flex flex-col table-wrapper">
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span class="font-bold text-slate-700 dark:text-slate-300">Parte Z [+]</span>
                     </div>
                     <div class="overflow-x-auto w-full">
-                        <table class="stats-table text-[13px] w-full" id="zTableRight">
-                        <thead><tr id="tableHeaderRowRight"></tr></thead>
-                        <tbody id="tableBodyRight"></tbody>
+                        <table class="stats-table" id="zTableRight">
+                            <thead><tr id="tableHeaderRowRight"></tr></thead>
+                            <tbody id="tableBodyRight"></tbody>
                         </table>
                     </div>
                 </div>

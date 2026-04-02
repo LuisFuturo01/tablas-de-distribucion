@@ -1,4 +1,6 @@
 import type { DistTable } from './types';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
 
 type CachedTables = {
     version: number;
@@ -697,9 +699,251 @@ function calculateZ(): void {
     showBreakdownZ(lo.p, lo.z, targetP, zR, hi.p, hi.z, false);
 }
 
+/** CSS de impresión aplicado como estilos globales (sin @media print wrapper).
+ *  Esto fuerza la página a verse EXACTAMENTE como la vista de impresión. */
+const PDF_INJECT_CSS = `
+/* ——— PDF CAPTURE MODE ——— */
+.no-print { display: none !important; }
+footer { display: none !important; }
+body{
+    min-width: 1200px !important;
+    width: 1200px !important;
+    max-width: 1200px !important;
+    display: flex !important;
+    flex: 1 !important;
+    justify-content:center !important;
+    align-items:center !important;
+}
+body.pdf-capture {
+    background: transparent !important;
+    color: #1e293b !important;
+    margin: 0 !important;
+    padding: 2px !important;
+    font-size: 8pt !important;
+    width: 1200px !important;
+    min-width: 1200px !important;
+    overflow: visible !important;
+}
+
+body.pdf-capture * {
+    transition: none !important;
+    animation: none !important;
+}
+
+body.pdf-capture .container-full {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+body.pdf-capture header {
+    margin-bottom: 2px !important;
+    text-align: center !important;
+    padding: 0 !important;
+}
+body.pdf-capture header h1 {
+    font-size: 16pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #1e1b4b !important;
+    line-height: 1.3 !important;
+}
+body.pdf-capture header p {
+    font-size: 9pt !important;
+    margin: 2px 0 0 0 !important;
+    padding: 0 !important;
+    color: #475569 !important;
+    line-height: 1.2 !important;
+}
+
+body.pdf-capture #imageContainer {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    display: flex !important;
+}
+body.pdf-capture #imageContainer img {
+    height: 100px !important;
+    max-height: 100px !important;
+    min-height: 70px !important;
+    width: auto !important;
+    border: 1px solid #ccc !important;
+    padding: 2px !important;
+    box-shadow: none !important;
+    border-radius: 2px !important;
+}
+
+body.pdf-capture .tabla-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.pdf-capture .tabla-container-tab {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+}
+
+body.pdf-capture .table-wrapper {
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    border: 1px solid #94a3b8 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.pdf-capture .table-wrapper > .bg-slate-100,
+body.pdf-capture .table-wrapper > div.border-b {
+    padding: 2px 5px !important;
+    background-color: #f1f5f9 !important;
+    border-bottom: 1px solid #000 !important;
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+    display: block !important;
+}
+
+body.pdf-capture .overflow-x-auto {
+    overflow: visible !important;
+}
+
+body.pdf-capture .stats-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 8pt !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+}
+
+body.pdf-capture .stats-table th,
+body.pdf-capture .stats-table td {
+    padding: 3px 5px !important;
+    line-height: 1.4 !important;
+    border: 1px solid #cbd5e1 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    font-size: 8pt !important;
+}
+
+body.pdf-capture .stats-table thead th {
+    font-size: 7.5pt !important;
+    padding: 3px 5px !important;
+    background-color: #e2e8f0 !important;
+    font-weight: 700 !important;
+}
+
+body.pdf-capture .stats-table tbody th {
+    font-size: 8pt !important;
+    font-weight: 700 !important;
+    padding: 3px 5px !important;
+    position: static !important;
+    box-shadow: none !important;
+}
+
+body.pdf-capture .calculadora {
+    display: none !important;
+}
+`;
+
+/** Genera y descarga un PDF con el mismo formato que la vista de impresión. */
+async function downloadPdf(): Promise<void> {
+    const btn = document.getElementById('btnDownloadPdf') as HTMLButtonElement;
+    const originalText = btn.querySelector('span')!.textContent;
+    btn.querySelector('span')!.textContent = 'Generando PDF…';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+
+    const htmlElem = document.documentElement;
+    const wasDark = htmlElem.classList.contains('dark');
+
+    // 1. Forzar modo claro
+    if (wasDark) htmlElem.classList.remove('dark');
+
+    // 2. Inyectar CSS de impresión como estilos globales
+    const styleTag = document.createElement('style');
+    styleTag.id = 'pdf-capture-styles';
+    styleTag.textContent = PDF_INJECT_CSS;
+    document.head.appendChild(styleTag);
+
+    // 3. Activar modo de captura
+    document.body.classList.add('pdf-capture');
+
+    // Guardar scroll y forzar top
+    const savedScroll = window.scrollY;
+    window.scrollTo(0, 0);
+
+    // Pequeña pausa para que el reflow se aplique
+    await new Promise(r => setTimeout(r, 200));
+
+    const captureTarget = document.querySelector('.container-full') as HTMLElement;
+    const titleText = document.getElementById('tableTitle')!.textContent || 'tabla';
+    const tableName = titleText.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '').trim().replace(/\s+/g, '_');
+
+    try {
+        // html2canvas-pro soporta oklab() nativamente
+        const canvas = await html2canvas(captureTarget, {
+            scale: 2,
+            useCORS: true,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+            width: 1200,
+            windowWidth: 1200,
+        });
+
+        // Letter landscape: 11 x 8.5 pulgadas
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'in',
+            format: 'letter',
+        });
+
+        const pageW = 15;
+        const pageH = 8.5;
+        const pdfMargin = 0.5;
+        const usableW = pageW - pdfMargin * 2;
+        const usableH = pageH - pdfMargin * 2;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const canvasRatio = canvas.height / canvas.width;
+        let imgW = usableW;
+        let imgH = imgW * canvasRatio;
+
+        // Si es más alto que la página, escalar para encajar
+        if (imgH > usableH) {
+            imgH = usableH;
+            imgW = imgH / canvasRatio;
+        }
+
+        pdf.addImage(imgData, 'JPEG', (pdfMargin+0.4), (pdfMargin-0.1), imgW, imgH);
+        pdf.save(`${tableName}.pdf`);
+    } catch (err) {
+        console.error('Error generando PDF:', err);
+        alert('Error al generar el PDF. Usa el botón Imprimir → Guardar como PDF.');
+    } finally {
+        // Restaurar todo
+        document.body.classList.remove('pdf-capture');
+        document.head.removeChild(styleTag);
+        if (wasDark) htmlElem.classList.add('dark');
+        window.scrollTo(0, savedScroll);
+        btn.querySelector('span')!.textContent = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
 function setupEvents(): void {
     document.getElementById('btnCalcP')!.addEventListener('click', calculateP);
     document.getElementById('btnCalcZ')!.addEventListener('click', calculateZ);
+    document.getElementById('btnDownloadPdf')!.addEventListener('click', downloadPdf);
 
     const darkBtn = document.getElementById('toggleDarkMode')!;
     const htmlElem = document.documentElement;

@@ -20,5 +20,11 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
     "vite": "^8.0.3"
+  },
+  "dependencies": {
+    "@csstools/postcss-oklab-function": "^5.0.2",
+    "html2canvas-pro": "^2.0.2",
+    "jspdf": "^4.2.1",
+    "postcss-color-function": "^4.1.0"
   }
 }
