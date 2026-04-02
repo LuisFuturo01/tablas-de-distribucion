@@ -177,14 +177,24 @@ function loadTableData(tableKey: string, table: DistTable): void {
     renderTable();
     hideBreakdowns();
 
-    const isNormal = !currentTable.meta || currentTable.meta.type === 'normal';
+    const type = currentTable.meta?.type || 'normal';
+    
+    const toolsNormal = document.getElementById('toolsNormal');
+    const toolsTStudent = document.getElementById('toolsTStudent');
+    const toolsChiSquare = document.getElementById('toolsChiSquare');
+    
+    if (toolsNormal) toolsNormal.style.display = type === 'normal' ? 'grid' : 'none';
+    if (toolsTStudent) toolsTStudent.style.display = type === 't' ? 'grid' : 'none';
+    if (toolsChiSquare) toolsChiSquare.style.display = type === 'chi' ? 'grid' : 'none';
+    
     const calcSection = document.getElementById('calculatorSection');
     if (calcSection) {
-        calcSection.style.display = isNormal ? '' : 'none';
+        calcSection.style.display = (type === 'normal' || type === 't' || type === 'chi') ? '' : 'none';
     }
 
     setTimeout(() => {
         renderMathIn(descEl);
+        if (calcSection) renderMathIn(calcSection);
     }, 50);
 }
 
@@ -208,23 +218,23 @@ function renderTable(): void {
         if (labelL) labelL.textContent = 'Parte Z [-]';
 
         const thLBlank = document.createElement('th');
-        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
         thLBlank.textContent = 'Z';
         theadL.appendChild(thLBlank);
 
         const thRBlank = document.createElement('th');
-        thRBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thRBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
         thRBlank.textContent = 'Z';
         theadR.appendChild(thRBlank);
 
         for (let i = 0; i < 10; i++) {
             const thL = document.createElement('th');
-            thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
+            thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
             thL.textContent = `.0${i}`;
             theadL.appendChild(thL);
 
             const thR = document.createElement('th');
-            thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
+            thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
             thR.textContent = `.0${i}`;
             theadR.appendChild(thR);
         }
@@ -256,24 +266,40 @@ function renderTable(): void {
         if (wrapperR) wrapperR.style.display = 'none';
         
         let firstColName = currentTable.meta?.type === 't' ? 'gl' : currentTable.meta?.type === 'chi' ? 'gl' : 'ν1 \\ ν2';
-        if (labelL) labelL.textContent = 'Valores';
-
         const thLBlank = document.createElement('th');
-        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569] align-bottom text-center';
         thLBlank.textContent = firstColName;
         theadL.appendChild(thLBlank);
+        
+        if (labelL) {
+            labelL.innerHTML = `Valores &nbsp;&nbsp;<span class="text-xs font-normal text-slate-500 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded ml-2">Alto: P(X≤x)=1-α &nbsp;|&nbsp; Bajo: P(X≥x)=α</span>`;
+        }
 
         const columns = currentTable.meta?.columns || [];
         columns.forEach(col => {
             const th = document.createElement('th');
-            th.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
-            th.textContent = String(col);
+            th.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 align-bottom sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
+            
+            const numCol = parseFloat(String(col));
+            if (!isNaN(numCol) && numCol > 0 && numCol < 1) {
+                const strNum = String(col);
+                const descStr = strNum.includes('.') ? strNum.split('.')[1] : '';
+                const decLen = descStr.length > 0 ? Math.max(2, descStr.length) : 2;
+                const complement = (1 - numCol).toFixed(decLen);
+                
+                th.innerHTML = `
+                    <div class="text-[0.65rem] text-slate-500 dark:text-slate-400 font-normal leading-tight pb-[2px] opacity-90 whitespace-nowrap tracking-wide">${complement}</div>
+                    <div class="text-[0.75rem] text-slate-800 dark:text-slate-100 leading-tight whitespace-nowrap font-bold tracking-wide">${strNum}</div>
+                `;
+            } else {
+                th.textContent = String(col);
+            }
             theadL.appendChild(th);
         });
 
         const keys = Object.keys(currentTable.rowData).sort((a, b) => {
-            const numA = a === '∞' ? Infinity : parseFloat(a);
-            const numB = b === '∞' ? Infinity : parseFloat(b);
+            const numA = (a === '∞' || a.toLowerCase() === 'inf') ? Infinity : parseFloat(a);
+            const numB = (b === '∞' || b.toLowerCase() === 'inf') ? Infinity : parseFloat(b);
             return (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
         });
 
@@ -932,6 +958,14 @@ async function downloadPdf(): Promise<void> {
 
     // Guardar scroll y forzar top
     const savedScroll = window.scrollY;
+    
+    const scrollStates: {el: Element, left: number, top: number}[] = [];
+    document.querySelectorAll('.overflow-auto, .overflow-x-auto, .overflow-y-auto').forEach(el => {
+        scrollStates.push({ el, left: el.scrollLeft, top: el.scrollTop });
+        el.scrollLeft = 0;
+        el.scrollTop = 0;
+    });
+
     window.scrollTo(0, 0);
 
     // Pequeña pausa para que el reflow se aplique
@@ -986,7 +1020,13 @@ async function downloadPdf(): Promise<void> {
         document.body.classList.remove('pdf-capture');
         document.head.removeChild(styleTag);
         if (wasDark) htmlElem.classList.add('dark');
+        
         window.scrollTo(0, savedScroll);
+        scrollStates.forEach(({el, left, top}) => {
+            el.scrollLeft = left;
+            el.scrollTop = top;
+        });
+
         btn.querySelector('span')!.textContent = originalText;
         btn.disabled = false;
         btn.style.opacity = '1';
@@ -994,9 +1034,11 @@ async function downloadPdf(): Promise<void> {
 }
 
 function setupEvents(): void {
-    document.getElementById('btnCalcP')!.addEventListener('click', calculateP);
-    document.getElementById('btnCalcZ')!.addEventListener('click', calculateZ);
-    document.getElementById('btnDownloadPdf')!.addEventListener('click', downloadPdf);
+    document.getElementById('btnCalcP')?.addEventListener('click', calculateP);
+    document.getElementById('btnCalcZ')?.addEventListener('click', calculateZ);
+    document.getElementById('btnCalcT')?.addEventListener('click', evaluateTStudent);
+    document.getElementById('btnCalcChi')?.addEventListener('click', evaluateChiSquare);
+    document.getElementById('btnDownloadPdf')?.addEventListener('click', downloadPdf);
 
     const darkBtn = document.getElementById('toggleDarkMode')!;
     const htmlElem = document.documentElement;
@@ -1018,11 +1060,20 @@ function setupEvents(): void {
         setDarkModeState(!htmlElem.classList.contains('dark'));
     });
 
+    let printScrollStates: {el: Element, left: number, top: number}[] = [];
+
     window.addEventListener('beforeprint', () => {
         if (htmlElem.classList.contains('dark')) {
             htmlElem.classList.remove('dark');
             htmlElem.dataset.restoreDark = '1';
         }
+        
+        printScrollStates = [];
+        document.querySelectorAll('.overflow-auto, .overflow-x-auto, .overflow-y-auto').forEach(el => {
+            printScrollStates.push({ el, left: el.scrollLeft, top: el.scrollTop });
+            el.scrollLeft = 0;
+            el.scrollTop = 0;
+        });
     });
 
     window.addEventListener('afterprint', () => {
@@ -1030,12 +1081,177 @@ function setupEvents(): void {
             htmlElem.classList.add('dark');
             delete htmlElem.dataset.restoreDark;
         }
+        
+        printScrollStates.forEach(({el, left, top}) => {
+            el.scrollLeft = left;
+            el.scrollTop = top;
+        });
+        printScrollStates = [];
     });
 
-    document.getElementById('inputZ')!.addEventListener('keydown', (e) => {
+    document.getElementById('inputZ')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') calculateP();
     });
-    document.getElementById('inputP')!.addEventListener('keydown', (e) => {
+    document.getElementById('inputP')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') calculateZ();
     });
+    document.getElementById('inputTCalc')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') evaluateTStudent();
+    });
+    document.getElementById('inputChiCalc')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') evaluateChiSquare();
+    });
+}
+
+function evaluateTStudent(): void {
+    const rawCalc = parseFloat((document.getElementById('inputTCalc') as HTMLInputElement).value);
+    const rawGlStr = (document.getElementById('inputTGl') as HTMLInputElement).value;
+    const rawAlpha = parseFloat((document.getElementById('inputTAlpha') as HTMLInputElement).value);
+    const tailType = (document.getElementById('selectTTail') as HTMLSelectElement).value;
+
+    const resEl = document.getElementById('resT')!;
+    const breakdownEl = document.getElementById('breakdownT')!;
+
+    const isInf = rawGlStr.toLowerCase().trim() === 'inf' || rawGlStr.trim() === '∞';
+    const rawGl = isInf ? Infinity : parseFloat(rawGlStr);
+
+    if (isNaN(rawCalc) || (!isInf && isNaN(rawGl)) || isNaN(rawAlpha)) {
+        resEl.textContent = 'Err: Revisa los campos';
+        resEl.className = 'text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center text-red-500';
+        breakdownEl.innerHTML = '<span class="text-slate-500">Faltan parámetros. Completa los 3 campos.</span>';
+        return;
+    }
+
+    const alphaUsed = tailType === "two" ? rawAlpha / 2 : rawAlpha;
+
+    let rowKeyStr = isInf ? 'inf' : String(Math.round(rawGl));
+    let row = currentTable.rowData[rowKeyStr];
+    
+    if (!row && isInf) {
+        rowKeyStr = currentTable.rowData['∞'] ? '∞' : 'inf';
+        row = currentTable.rowData[rowKeyStr];
+    }
+    
+    if (!row) {
+        const sortedGls = Object.keys(currentTable.rowData)
+            .map(x => (x === '∞' || x.toLowerCase() === 'inf') ? Infinity : parseInt(x, 10))
+            .filter(x => !isNaN(x))
+            .sort((a,b) => a - b);
+        
+        let nearestGl = sortedGls[0];
+        for (let i = 0; i < sortedGls.length; i++) {
+            if (sortedGls[i] <= rawGl) nearestGl = sortedGls[i];
+            else break;
+        }
+        
+        if (nearestGl === Infinity) {
+            rowKeyStr = currentTable.rowData['∞'] ? '∞' : 'inf';
+        } else {
+            rowKeyStr = String(nearestGl);
+        }
+        row = currentTable.rowData[rowKeyStr];
+    }
+
+    let cols = currentTable.meta?.columns || [];
+    let colValues = cols.map(c => typeof c === 'string' ? parseFloat(c) : c);
+    
+    let closestColIdx = 0;
+    let minDiff = Infinity;
+    
+    colValues.forEach((c, idx) => {
+        let diff = Math.abs(c - alphaUsed);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestColIdx = idx;
+        }
+    });
+
+    const criticalStr = row[closestColIdx];
+    const critical = parseFloat(criticalStr);
+
+    let reject = false;
+    let latexDecision = '';
+    
+    const tCritTex = `t_{${rawAlpha}${tailType==='two'? '/2':''}, ${rowKeyStr}}`;
+    
+    if (tailType === 'two') {
+        reject = Math.abs(rawCalc) > critical;
+        latexDecision = `\\text{Rechazar } H_0 \\text{ si } |t_{calc}| > ${tCritTex} \\\\ |${rawCalc}| ${reject ? '>' : '\\le'} ${critical}`;
+    } else if (tailType === 'right') {
+        reject = rawCalc > critical;
+        latexDecision = `\\text{Rechazar } H_0 \\text{ si } t_{calc} > ${tCritTex} \\\\ ${rawCalc} ${reject ? '>' : '\\le'} ${critical}`;
+    } else if (tailType === 'left') {
+        reject = rawCalc < -critical;
+        latexDecision = `\\text{Rechazar } H_0 \\text{ si } t_{calc} < -${tCritTex} \\\\ ${rawCalc} ${reject ? '<' : '\\ge'} -${critical}`;
+    }
+
+    resEl.textContent = reject ? 'Se Rechaza H0' : 'No se Rechaza H0';
+    resEl.className = `text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center ${reject ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`;
+
+    let alphaTex = tailType === 'two' ? `\\alpha/2 = ${alphaUsed}` : `\\alpha = ${alphaUsed}`;
+    let baseNotes = `gl = ${rowKeyStr} \\quad \\text{y} \\quad ${alphaTex} \\implies ${tCritTex} \\approx ${critical}`;
+    
+    renderKaTeXInto(breakdownEl, `\\begin{aligned} ${baseNotes} \\\\[0.8em] ${latexDecision} \\end{aligned}`, true);
+}
+
+function evaluateChiSquare(): void {
+    const rawCalc = parseFloat((document.getElementById('inputChiCalc') as HTMLInputElement).value);
+    const rawGl = Math.round(parseFloat((document.getElementById('inputChiGl') as HTMLInputElement).value));
+    const rawAlpha = parseFloat((document.getElementById('inputChiAlpha') as HTMLInputElement).value);
+
+    const resEl = document.getElementById('resChi')!;
+    const breakdownEl = document.getElementById('breakdownChi')!;
+
+    if (isNaN(rawCalc) || isNaN(rawGl) || isNaN(rawAlpha)) {
+        resEl.textContent = 'Err: Revisa los campos';
+        resEl.className = 'text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center text-red-500';
+        breakdownEl.innerHTML = '<span class="text-slate-500">Faltan parámetros. Completa los 3 campos.</span>';
+        return;
+    }
+
+    let rowKeyStr = String(Math.round(rawGl));
+    let row = currentTable.rowData[rowKeyStr];
+    
+    if (!row) {
+        const sortedGls = Object.keys(currentTable.rowData)
+            .map(x => parseInt(x, 10))
+            .filter(x => !isNaN(x))
+            .sort((a,b) => a - b);
+        let nearestGl = sortedGls[sortedGls.length - 1] || 1;
+        for (let i = 0; i < sortedGls.length; i++) {
+            if (sortedGls[i] <= rawGl) nearestGl = sortedGls[i];
+            else break;
+        }
+        rowKeyStr = String(nearestGl);
+        row = currentTable.rowData[rowKeyStr];
+    }
+    
+    if (!row) return;
+
+    let cols = currentTable.meta?.columns || [];
+    let colValues = cols.map(c => typeof c === 'string' ? parseFloat(c) : c);
+    
+    let closestColIdx = 0;
+    let minDiff = Infinity;
+    
+    colValues.forEach((c, idx) => {
+        let diff = Math.abs(c - rawAlpha);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestColIdx = idx;
+        }
+    });
+
+    const critical = parseFloat(row[closestColIdx]);
+    const reject = rawCalc > critical;
+    
+    resEl.textContent = reject ? 'Se Rechaza H0' : 'No se Rechaza H0';
+    resEl.className = `text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center ${reject ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`;
+
+    const chiCritStr = `\\chi^2_{\\alpha, gl}`;
+    const latexDecision = `\\text{Rechazar } H_0 \\text{ si } \\chi^2_{calc} > ${chiCritStr} \\\\ ${rawCalc} ${reject ? '>' : '\\le'} ${critical}`;
+    
+    let baseNotes = `gl = ${rowKeyStr} \\quad \\text{y} \\quad \\alpha = ${rawAlpha} \\implies ${chiCritStr} \\approx ${critical}`;
+    
+    renderKaTeXInto(breakdownEl, `\\begin{aligned} ${baseNotes} \\\\[0.8em] ${latexDecision} \\end{aligned}`, true);
 }

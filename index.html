@@ -51,9 +51,9 @@
             <p id="tableDesc" class="text-slate-600 dark:text-slate-400 mt-2 text-lg">...</p>
             <p id="cacheStatus" class="text-xs text-slate-500 dark:text-slate-400 mt-1 min-h-[1.1rem]"></p>
             
-            <div id="imageContainer" class="mt-4 xl:mt-6 flex flex-wrap gap-8 items-center justify-center w-full">
-                <img id="img1" src="/img/espera.webp" alt="Ilustración Principal" class="h-44 md:h-52 xl:h-60 max-w-full object-contain rounded-xl shadow-sm bg-white dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700 mx-auto">
-                <img id="img2" src="/img/espera.webp" alt="Ilustración Secundaria" class="h-44 md:h-52 xl:h-60 max-w-full object-contain rounded-xl shadow-sm bg-white dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700 mx-auto">
+            <div id="imageContainer" class="mt-4 xl:mt-6 flex flex-wrap gap-4 md:gap-8 items-center justify-center w-full">
+                <img id="img1" src="/img/espera.webp" alt="Ilustración Principal" class="h-28 md:h-36 xl:h-40 max-w-[45%] md:max-w-full object-contain rounded-xl shadow-sm bg-white dark:bg-slate-800 p-2 lg:p-3 border border-slate-100 dark:border-slate-700 mx-auto">
+                <img id="img2" src="/img/espera.webp" alt="Ilustración Secundaria" class="h-28 md:h-36 xl:h-40 max-w-[45%] md:max-w-full object-contain rounded-xl shadow-sm bg-white dark:bg-slate-800 p-2 lg:p-3 border border-slate-100 dark:border-slate-700 mx-auto">
             </div>
         </header>
 
@@ -65,7 +65,7 @@
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span id="tableLabelLeft" class="font-bold text-slate-700 dark:text-slate-300">Parte Z [-]</span>
                     </div>
-                    <div class="overflow-x-auto w-full">
+                    <div class="overflow-x-auto overflow-y-auto max-h-[65vh] w-full">
                         <table class="stats-table" id="zTableLeft">
                             <thead><tr id="tableHeaderRowLeft"></tr></thead>
                             <tbody id="tableBodyLeft"></tbody>
@@ -77,7 +77,7 @@
                     <div class="bg-slate-100 dark:bg-slate-900 py-2 px-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center no-print">
                         <span class="font-bold text-slate-700 dark:text-slate-300">Parte Z [+]</span>
                     </div>
-                    <div class="overflow-x-auto w-full">
+                    <div class="overflow-x-auto overflow-y-auto max-h-[65vh] w-full">
                         <table class="stats-table" id="zTableRight">
                             <thead><tr id="tableHeaderRowRight"></tr></thead>
                             <tbody id="tableBodyRight"></tbody>
@@ -90,15 +90,17 @@
 
         <!-- Calculadora de Interpolación Abajo (No se imprime) -->
         <div id="calculatorSection" class="bg-indigo-50/50 dark:bg-slate-800 border-2 border-indigo-100 dark:border-slate-700 rounded-2xl p-6 mb-8 no-print shadow-sm transition-colors duration-200 calculadora">
-            <h2 class="text-xl font-bold text-indigo-900 dark:text-indigo-300 mb-6 flex items-center gap-2">
+            <h2 id="calculatorTitle" class="text-xl font-bold text-indigo-900 dark:text-indigo-300 mb-6 flex items-center gap-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                Calculadora de Interpolación y Desglose
+                Calculadora
             </h2>
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 w-full">
+            
+            <div id="toolsNormal" class="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 w-full">
                 
                 <!-- Probabilidad -->
                 <div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full h-full">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Encontrar Probabilidad interpolada (dado Z)</label>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Encontrar Probabilidad interpolada (dado $z$)</label>
+                    <p class="text-[0.7rem] text-indigo-500 mb-2 font-medium">Nota: $P(Z \le z) = P(Z \ge -z)$</p>
                     <div class="flex gap-2">
                         <input type="number" id="inputZ" step="0.0001" placeholder="Ej: 1.2550 (4 decimales)" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
                         <button id="btnCalcP" class="bg-indigo-600 text-white px-5 py-2 font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors cursor-pointer">Calcular</button>
@@ -159,8 +161,77 @@
                         </div>
                     </div>
                 </div>
-                
             </div>
+
+            <!-- T-STUDENT -->
+            <div id="toolsTStudent" class="hidden grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 w-full">
+                <div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full h-full xl:col-span-1">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Prueba de Hipótesis (Contraste t)</label>
+                    <p class="text-[0.7rem] text-indigo-500 mb-2 font-medium">Simetría: $P(T \le t) = P(T \ge -t)$</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Estadístico $t_{calc}$</label>
+                            <input type="number" id="inputTCalc" step="0.001" placeholder="Ej: 2.15" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Grados lib. ($v$)</label>
+                            <input type="text" id="inputTGl" placeholder="Ej: 10 o inf" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Significancia ($\alpha$)</label>
+                            <input type="number" id="inputTAlpha" step="0.001" placeholder="Ej: 0.05" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Tipo de Prueba</label>
+                            <select id="selectTTail" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                                <option value="two">Bilateral</option>
+                                <option value="right">Unilateral Derecha</option>
+                                <option value="left">Unilateral Izquierda</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="btnCalcT" class="bg-indigo-600 text-white px-5 py-2.5 font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors cursor-pointer w-full mt-auto">Evaluar Hipótesis</button>
+                </div>
+                
+                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 p-5 flex flex-col h-full xl:col-span-1">
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Decisión del Contraste</p>
+                    <div id="resT" class="text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center text-slate-700 dark:text-slate-200">--</div>
+                    <div id="breakdownT" class="mt-4 text-sm bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto flex-grow flex items-center justify-center text-slate-600 dark:text-slate-400">
+                        Esperando datos para calcular...
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHI-CUADRADO -->
+            <div id="toolsChiSquare" class="hidden grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 w-full">
+                <div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full h-full xl:col-span-1">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Prueba de Hipótesis ($\chi^2$)</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div class="sm:col-span-2">
+                            <label class="text-xs text-slate-500 mb-1 block">Estadístico $\chi^2_{calc}$</label>
+                            <input type="number" id="inputChiCalc" step="0.001" placeholder="Ej: 12.5" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Grados lib. ($gl$)</label>
+                            <input type="number" id="inputChiGl" step="1" placeholder="Ej: 5" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 mb-1 block">Significancia ($\alpha$)</label>
+                            <input type="number" id="inputChiAlpha" step="0.001" placeholder="Ej: 0.05" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-slate-800 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+                        </div>
+                    </div>
+                    <button id="btnCalcChi" class="bg-indigo-600 text-white px-5 py-2.5 font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors cursor-pointer w-full mt-auto">Evaluar Hipótesis</button>
+                </div>
+                
+                <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 p-5 flex flex-col h-full xl:col-span-1">
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Decisión del Contraste</p>
+                    <div id="resChi" class="text-center font-bold text-xl min-h-[2.5rem] flex items-center justify-center text-slate-700 dark:text-slate-200">--</div>
+                    <div id="breakdownChi" class="mt-4 text-sm bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto flex-grow flex items-center justify-center text-slate-600 dark:text-slate-400">
+                        Esperando datos para calcular...
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div>

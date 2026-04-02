@@ -13,7 +13,9 @@
     --color-primary-600: #2563eb;
     --color-primary-700: #1d4ed8;
 }
-
+th{
+    width: 80px !important;
+}
 #cacheStatus {
     display: none;
 }
@@ -87,7 +89,7 @@
 
 /* Cada table-wrapper ocupa ~49% del espacio si caben las dos, sino salta abajo */
 .tabla-container-tab > .table-wrapper {
-    flex: 1 1 480px;
+    flex: 1 1 450px;
     min-width: 0;
     max-width: 100%;
     width: auto;
@@ -105,7 +107,6 @@
     border: 1px solid rgba(148, 163, 184, 0.35);
     background: white;
     border-radius: 0.65rem;
-    overflow: hidden;
     width: 100%;
     min-width: 580px; /* Mínimo por tabla para que se vea bien */
     table-layout: fixed;
@@ -115,7 +116,7 @@
 .stats-table td {
     border-bottom: 1px solid var(--color-gray-200);
     border-right: 1px solid var(--color-gray-200);
-    min-width: 30px;
+    min-width: 100px;
     white-space: nowrap;
     font-size: 0.85rem;
     padding: 0.45rem 0.55rem;
@@ -185,12 +186,13 @@
     }
 
     .stats-table {
-        min-width: 560px;
+        min-width: 800px;
     }
 
     .stats-table th,
     .stats-table td {
         font-size: 0.95rem;
+        min-width: 100px;
         padding: 0.6rem 0.75rem;
     }
 
@@ -248,9 +250,9 @@
 
     .stats-table th,
     .stats-table td {
-        font-size: 11px;
-        min-width: 44px;
-        padding: 0.35rem 0.45rem;
+        font-size: 13px;
+        min-width: 90px;
+        padding: 0.5rem 0.65rem;
     }
 }
 
@@ -390,9 +392,9 @@
         display: flex !important;
     }
     #imageContainer img {
-        height: 75px !important;
-        max-height: 75px !important;
-        min-height: 55px !important;
+        height: 50px !important;
+        max-height: 50px !important;
+        min-height: 40px !important;
         width: auto !important;
         border: 1px solid #ccc !important;
         padding: 1px !important;
