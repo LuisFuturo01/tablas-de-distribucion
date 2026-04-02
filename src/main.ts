@@ -177,71 +177,124 @@ function loadTableData(tableKey: string, table: DistTable): void {
     renderTable();
     hideBreakdowns();
 
+    const isNormal = !currentTable.meta || currentTable.meta.type === 'normal';
+    const calcSection = document.getElementById('calculatorSection');
+    if (calcSection) {
+        calcSection.style.display = isNormal ? '' : 'none';
+    }
+
     setTimeout(() => {
         renderMathIn(descEl);
     }, 50);
 }
 
 function renderTable(): void {
+    const isNormal = !currentTable.meta || currentTable.meta.type === 'normal';
     const theadL = document.getElementById('tableHeaderRowLeft')!;
     const tbodyL = document.getElementById('tableBodyLeft')!;
     const theadR = document.getElementById('tableHeaderRowRight')!;
     const tbodyR = document.getElementById('tableBodyRight')!;
+    
+    const wrapperR = document.getElementById('tableWrapperRight');
+    const labelL = document.getElementById('tableLabelLeft');
 
     theadL.innerHTML = '';
     tbodyL.innerHTML = '';
     theadR.innerHTML = '';
     tbodyR.innerHTML = '';
 
-    const thLBlank = document.createElement('th');
-    thLBlank.className =
-        'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
-    thLBlank.textContent = 'Z';
-    theadL.appendChild(thLBlank);
+    if (isNormal) {
+        if (wrapperR) wrapperR.style.display = '';
+        if (labelL) labelL.textContent = 'Parte Z [-]';
 
-    const thRBlank = document.createElement('th');
-    thRBlank.className =
-        'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
-    thRBlank.textContent = 'Z';
-    theadR.appendChild(thRBlank);
+        const thLBlank = document.createElement('th');
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thLBlank.textContent = 'Z';
+        theadL.appendChild(thLBlank);
 
-    for (let i = 0; i < 10; i++) {
-        const thL = document.createElement('th');
-        thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
-        thL.textContent = `.0${i}`;
-        theadL.appendChild(thL);
+        const thRBlank = document.createElement('th');
+        thRBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thRBlank.textContent = 'Z';
+        theadR.appendChild(thRBlank);
 
-        const thR = document.createElement('th');
-        thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
-        thR.textContent = `.0${i}`;
-        theadR.appendChild(thR);
-    }
+        for (let i = 0; i < 10; i++) {
+            const thL = document.createElement('th');
+            thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
+            thL.textContent = `.0${i}`;
+            theadL.appendChild(thL);
 
-    const keys = Object.keys(currentTable.rowData).sort((a, b) => parseFloat(a) - parseFloat(b));
-    keys.forEach((z) => {
-        const row = document.createElement('tr');
+            const thR = document.createElement('th');
+            thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
+            thR.textContent = `.0${i}`;
+            theadR.appendChild(thR);
+        }
 
-        const thZ = document.createElement('th');
-        thZ.className =
-            'p-1 sm:p-2 font-bold bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-600 z-10 sticky left-0 text-slate-800 dark:text-slate-100';
-        thZ.textContent = z;
-        row.appendChild(thZ);
+        const keys = Object.keys(currentTable.rowData).sort((a, b) => parseFloat(a) - parseFloat(b));
+        keys.forEach((z) => {
+            const row = document.createElement('tr');
 
-        currentTable.rowData[z].forEach((val, idx) => {
-            const td = document.createElement('td');
-            td.className =
-                'p-1 tracking-tight font-mono transition-colors text-slate-800 dark:text-slate-300';
-            td.dataset.col = idx.toString();
-            td.textContent = val;
-            row.appendChild(td);
+            const thZ = document.createElement('th');
+            thZ.className = 'p-1 sm:p-2 font-bold bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-600 z-10 sticky left-0 text-slate-800 dark:text-slate-100';
+            thZ.textContent = z;
+            row.appendChild(thZ);
+
+            currentTable.rowData[z].forEach((val, idx) => {
+                const td = document.createElement('td');
+                td.className = 'p-1 tracking-tight font-mono transition-colors text-slate-800 dark:text-slate-300';
+                td.dataset.col = idx.toString();
+                td.textContent = val;
+                row.appendChild(td);
+            });
+
+            if (z.startsWith('-')) {
+                tbodyL.appendChild(row);
+            } else {
+                tbodyR.appendChild(row);
+            }
+        });
+    } else {
+        if (wrapperR) wrapperR.style.display = 'none';
+        
+        let firstColName = currentTable.meta?.type === 't' ? 'gl' : currentTable.meta?.type === 'chi' ? 'gl' : 'ν1 \\ ν2';
+        if (labelL) labelL.textContent = 'Valores';
+
+        const thLBlank = document.createElement('th');
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-600 font-bold';
+        thLBlank.textContent = firstColName;
+        theadL.appendChild(thLBlank);
+
+        const columns = currentTable.meta?.columns || [];
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            th.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300';
+            th.textContent = String(col);
+            theadL.appendChild(th);
         });
 
-        if (z.startsWith('-')) {
+        const keys = Object.keys(currentTable.rowData).sort((a, b) => {
+            const numA = a === '∞' ? Infinity : parseFloat(a);
+            const numB = b === '∞' ? Infinity : parseFloat(b);
+            return (isNaN(numA) ? 0 : numA) - (isNaN(numB) ? 0 : numB);
+        });
+
+        keys.forEach((key) => {
+            const row = document.createElement('tr');
+            
+            const thKey = document.createElement('th');
+            thKey.className = 'p-1 sm:p-2 font-bold bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-600 z-10 sticky left-0 text-slate-800 dark:text-slate-100';
+            thKey.textContent = key;
+            row.appendChild(thKey);
+
+            currentTable.rowData[key].forEach((val, idx) => {
+                const td = document.createElement('td');
+                td.className = 'p-1 tracking-tight font-mono transition-colors text-slate-800 dark:text-slate-300';
+                td.dataset.col = idx.toString();
+                td.textContent = val;
+                row.appendChild(td);
+            });
             tbodyL.appendChild(row);
-        } else {
-            tbodyR.appendChild(row);
-        }
-    });
+        });
+    }
 }
 
 function runBackgroundSync(): void {

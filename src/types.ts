@@ -6,4 +6,10 @@ export interface DistTable {
   rowData: Record<string, string[]>;
   zMin: number;
   zMax: number;
+  
+  meta?: {
+    type: "normal" | "t" | "chi" | "f";
+    columns?: number[];
+    extraDims?: any;
+  };
 }

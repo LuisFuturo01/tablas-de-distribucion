@@ -13,7 +13,24 @@
     --color-primary-600: #2563eb;
     --color-primary-700: #1d4ed8;
 }
+
+#cacheStatus {
+    display: none;
+}
 .buttons{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    &>*{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+}
+@media (max-width: 768px){
+    .buttons{
     display: flex;
     flex-wrap: wrap;
     *{
@@ -42,14 +59,13 @@
         width: 100%;
         justify-content: center;
         align-items: center;
-        min-height: 40px;
+        max-height: 45px;
         font-size: .7rem;
+        padding: .2rem;
     }
 }
-#cacheStatus {
-    display: none;
 }
-
+    
 /* =============================================
    TABLA CONTAINER – layout de las dos tablas
    ============================================= */
