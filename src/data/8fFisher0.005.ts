@@ -3,7 +3,7 @@ import type { DistTable } from '../types';
 export const fTable0005: DistTable = {
   name: "Tabla F de Fisher (α = 0.005)",
   description: "Valores críticos de F para un nivel de significancia del 0.5%.",
-  images: ["../../../../img/f-left.png", "../../../../../img/f-right.png"],
+  images: ["../../../../img/f-left01.png", "../../../../img/f-right.png"],
   zMin: 1,
   zMax: 1000,
   rowData: {
