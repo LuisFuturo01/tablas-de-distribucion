@@ -218,23 +218,23 @@ function renderTable(): void {
         if (labelL) labelL.textContent = 'Parte Z [-]';
 
         const thLBlank = document.createElement('th');
-        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky -top-px left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
         thLBlank.textContent = 'Z';
         theadL.appendChild(thLBlank);
 
         const thRBlank = document.createElement('th');
-        thRBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
+        thRBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky -top-px left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569]';
         thRBlank.textContent = 'Z';
         theadR.appendChild(thRBlank);
 
         for (let i = 0; i < 10; i++) {
             const thL = document.createElement('th');
-            thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
+            thL.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky -top-px z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
             thL.textContent = `.0${i}`;
             theadL.appendChild(thL);
 
             const thR = document.createElement('th');
-            thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
+            thR.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 sticky -top-px z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
             thR.textContent = `.0${i}`;
             theadR.appendChild(thR);
         }
@@ -267,7 +267,7 @@ function renderTable(): void {
         
         let firstColName = currentTable.meta?.type === 't' ? 'gl' : currentTable.meta?.type === 'chi' ? 'gl' : 'ν1 \\ ν2';
         const thLBlank = document.createElement('th');
-        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky top-0 left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569] align-bottom text-center';
+        thLBlank.className = 'p-2 py-3 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 font-bold sticky -top-px left-0 z-30 shadow-[1px_1px_0_0_#cbd5e1] dark:shadow-[1px_1px_0_0_#475569] align-bottom text-center';
         thLBlank.textContent = firstColName;
         theadL.appendChild(thLBlank);
         
@@ -278,7 +278,7 @@ function renderTable(): void {
         const columns = currentTable.meta?.columns || [];
         columns.forEach(col => {
             const th = document.createElement('th');
-            th.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 align-bottom sticky top-0 z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
+            th.className = 'p-2 font-semibold text-slate-700 dark:text-slate-300 align-bottom sticky -top-px z-20 bg-slate-200 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-600 shadow-[0_1px_0_0_#cbd5e1] dark:shadow-[0_1px_0_0_#475569]';
             
             const numCol = parseFloat(String(col));
             if (!isNaN(numCol) && numCol > 0 && numCol < 1) {
