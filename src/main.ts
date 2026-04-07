@@ -187,9 +187,14 @@ function loadTableData(tableKey: string, table: DistTable): void {
     if (toolsTStudent) toolsTStudent.style.display = type === 't' ? 'grid' : 'none';
     if (toolsChiSquare) toolsChiSquare.style.display = type === 'chi' ? 'grid' : 'none';
     
+    const toolsFisher = document.getElementById('toolsFisher');
+    const toolsGamma = document.getElementById('toolsGamma');
+    if (toolsFisher) toolsFisher.style.display = type === 'f' ? 'grid' : 'none';
+    if (toolsGamma) toolsGamma.style.display = type === 'gamma' ? 'grid' : 'none';
+    
     const calcSection = document.getElementById('calculatorSection');
     if (calcSection) {
-        calcSection.style.display = (type === 'normal' || type === 't' || type === 'chi') ? '' : 'none';
+        calcSection.style.display = '';
     }
 
     setTimeout(() => {
@@ -1039,6 +1044,18 @@ function setupEvents(): void {
     document.getElementById('btnCalcT')?.addEventListener('click', evaluateTStudent);
     document.getElementById('btnCalcChi')?.addEventListener('click', evaluateChiSquare);
     document.getElementById('btnDownloadPdf')?.addEventListener('click', downloadPdf);
+    
+    document.getElementById('btnInterpT')?.addEventListener('click', interpolateT);
+    document.getElementById('btnInterpChi')?.addEventListener('click', interpolateChi);
+    document.getElementById('btnInterpF')?.addEventListener('click', interpolateF);
+    document.getElementById('btnInterpGamma')?.addEventListener('click', interpolateGamma);
+    document.getElementById('btnGammaT')?.addEventListener('click', () => calcGammaUI('inputGammaT', 'resGammaT'));
+    document.getElementById('btnGammaChi')?.addEventListener('click', () => calcGammaUI('inputGammaChi', 'resGammaChi'));
+    document.getElementById('btnGammaFunc')?.addEventListener('click', () => calcGammaUI('inputGammaFunc', 'resGammaFunc'));
+    
+    document.getElementById('btnOpenProps')?.addEventListener('click', openPropsDrawer);
+    document.getElementById('btnCloseProps')?.addEventListener('click', closePropsDrawer);
+    document.getElementById('propsOverlay')?.addEventListener('click', closePropsDrawer);
 
     const darkBtn = document.getElementById('toggleDarkMode')!;
     const htmlElem = document.documentElement;
@@ -1254,4 +1271,475 @@ function evaluateChiSquare(): void {
     let baseNotes = `gl = ${rowKeyStr} \\quad \\text{y} \\quad \\alpha = ${rawAlpha} \\implies ${chiCritStr} \\approx ${critical}`;
     
     renderKaTeXInto(breakdownEl, `\\begin{aligned} ${baseNotes} \\\\[0.8em] ${latexDecision} \\end{aligned}`, true);
+}
+/* =============================================
+   Función Gamma Γ(s) – Aproximación de Lanczos
+   ============================================= */
+function lanczosGamma(z: number): number {
+    if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * lanczosGamma(1 - z));
+    z -= 1;
+    const g = 7;
+    const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    let x = c[0];
+    for (let i = 1; i < g + 2; i++) x += c[i] / (z + i);
+    const t = z + g + 0.5;
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+}
+
+function calcGammaUI(inputId: string, resId: string): void {
+    const raw = parseFloat((document.getElementById(inputId) as HTMLInputElement).value);
+    const resEl = document.getElementById(resId)!;
+    if (isNaN(raw)) { resEl.textContent = 'Err: ingresa un número'; return; }
+    if (raw <= 0 && Number.isInteger(raw)) { resEl.textContent = 'Γ no definida para enteros ≤ 0'; return; }
+    const result = lanczosGamma(raw);
+    if (Number.isInteger(raw) && raw > 0) {
+        let factorial = 1; for (let i = 2; i < raw; i++) factorial *= i;
+        renderKaTeXInto(resEl, `\\Gamma(${raw}) = ${Math.round(raw) - 1}! = ${factorial}`, false);
+    } else if (Math.abs(raw - 0.5) < 1e-10) {
+        renderKaTeXInto(resEl, `\\Gamma(0.5) = \\sqrt{\\pi} \\approx ${Math.sqrt(Math.PI).toPrecision(10)}`, false);
+    } else {
+        renderKaTeXInto(resEl, `\\Gamma(${raw}) \\approx ${result.toPrecision(10)}`, false);
+    }
+}
+
+/* =============================================
+   Interpolación Genérica para tablas
+   ============================================= */
+function getSortedRowKeys(table: DistTable): { key: string; num: number }[] {
+    return Object.keys(table.rowData)
+        .map(k => ({ key: k, num: (k === '∞' || k.toLowerCase() === 'inf') ? Infinity : parseFloat(k) }))
+        .filter(x => !isNaN(x.num)).sort((a, b) => a.num - b.num);
+}
+
+function findColIdx(table: DistTable, targetAlpha: number): number {
+    const cols = table.meta?.columns || [];
+    let best = 0, minD = Infinity;
+    cols.forEach((c, i) => { const d = Math.abs(Number(c) - targetAlpha); if (d < minD) { minD = d; best = i; } });
+    return best;
+}
+
+function interpolateBetweenRows(table: DistTable, targetRow: number, colIdx: number): { val: number; lo: { key: string; num: number; v: number }; hi: { key: string; num: number; v: number }; exact: boolean } | null {
+    const rows = getSortedRowKeys(table);
+    if (rows.length === 0) return null;
+    for (const r of rows) {
+        if (Math.abs(r.num - targetRow) < 1e-9) {
+            const v = parseFloat(table.rowData[r.key][colIdx]);
+            return { val: v, lo: { ...r, v }, hi: { ...r, v }, exact: true };
+        }
+    }
+    let loR = rows[0], hiR = rows[rows.length - 1];
+    for (let i = 0; i < rows.length - 1; i++) {
+        if (rows[i].num <= targetRow && rows[i + 1].num >= targetRow) { loR = rows[i]; hiR = rows[i + 1]; break; }
+    }
+    const vLo = parseFloat(table.rowData[loR.key][colIdx]);
+    const vHi = parseFloat(table.rowData[hiR.key][colIdx]);
+    if (hiR.num === loR.num) return { val: vLo, lo: { ...loR, v: vLo }, hi: { ...hiR, v: vHi }, exact: true };
+    const val = vLo + ((targetRow - loR.num) / (hiR.num - loR.num)) * (vHi - vLo);
+    return { val, lo: { ...loR, v: vLo }, hi: { ...hiR, v: vHi }, exact: false };
+}
+
+
+
+function showInterpResult(resId: string, bdId: string, label: string, targetRow: number, rowLabel: string, result: ReturnType<typeof interpolateBetweenRows>): void {
+    const resEl = document.getElementById(resId)!;
+    const bdEl = document.getElementById(bdId)!;
+    if (!result) { resEl.textContent = 'No encontrado'; bdEl.textContent = ''; return; }
+    
+    const { val, lo, hi, exact } = result;
+    renderKaTeXInto(resEl, `${label} \\approx ${val.toFixed(4)}`, false);
+    
+    if (exact) {
+        renderKaTeXInto(bdEl, `\\text{Valor exacto en tabla}`, true);
+    } else {
+        let rawLabel = rowLabel;
+        if(rawLabel === '\\nu_2') rawLabel = 'ν₂';
+        if(rawLabel === '\\nu_1') rawLabel = 'ν₁';
+        if(rawLabel === '\\alpha') rawLabel = 'α';
+
+        const tableHtml = `
+            <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Desglose Regla de Tres Proporcional</p>
+                <div class="overflow-x-auto w-full mb-4">
+                    <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
+                        <thead class="bg-slate-100 dark:bg-slate-700">
+                            <tr><th>Punto</th><th class="whitespace-nowrap">${rawLabel}</th><th class="whitespace-nowrap">Resolución</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-100 dark:border-slate-700">
+                                <td class="font-semibold text-slate-500">Ant.</td>
+                                <td>${lo.num}</td><td>${lo.v.toFixed(4)}</td>
+                            </tr>
+                            <tr class="bg-indigo-50/50 dark:bg-indigo-900/20 font-semibold text-indigo-700 dark:text-indigo-400">
+                                <td>Buscado</td>
+                                <td>${targetRow}</td><td>${val.toFixed(4)}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold text-slate-500">Sig.</td>
+                                <td>${hi.num}</td><td>${hi.v.toFixed(4)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
+                <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
+            </div>
+        `;
+        bdEl.innerHTML = tableHtml;
+        const formulaEl = document.getElementById(bdId + '_formula')!;
+        renderKaTeXInto(formulaEl, `\\begin{aligned} ${label} &= ${lo.v.toFixed(4)} + \\dfrac{${targetRow} - ${lo.num}}{${hi.num} - ${lo.num}} \\cdot (${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}) \\\\ &\\approx ${val.toFixed(4)} \\end{aligned}`, true);
+    }
+}
+function interpolateT(): void {
+    const gl = parseFloat((document.getElementById('inputTInterpGl') as HTMLInputElement).value);
+    const alpha = parseFloat((document.getElementById('inputTInterpAlpha') as HTMLInputElement).value);
+    if (isNaN(gl) || isNaN(alpha)) { document.getElementById('resInterpT')!.textContent = 'Err: completa campos'; return; }
+    const colIdx = findColIdx(currentTable, alpha);
+    const result = interpolateBetweenRows(currentTable, gl, colIdx);
+    showInterpResult('resInterpT', 'breakdownInterpT', 't_{\\alpha,gl}', gl, 'gl', result);
+}
+
+function interpolateChi(): void {
+    const gl = parseFloat((document.getElementById('inputChiInterpGl') as HTMLInputElement).value);
+    const alpha = parseFloat((document.getElementById('inputChiInterpAlpha') as HTMLInputElement).value);
+    if (isNaN(gl) || isNaN(alpha)) { document.getElementById('resInterpChi')!.textContent = 'Err: completa campos'; return; }
+    const colIdx = findColIdx(currentTable, alpha);
+    const result = interpolateBetweenRows(currentTable, gl, colIdx);
+    showInterpResult('resInterpChi', 'breakdownInterpChi', '\\chi^2_{\\alpha,gl}', gl, 'gl', result);
+}
+
+function interpolateF(): void {
+    const v2 = parseFloat((document.getElementById('inputFInterpV2') as HTMLInputElement).value);
+    const v1 = parseFloat((document.getElementById('inputFInterpV1') as HTMLInputElement).value);
+    if (isNaN(v2) || isNaN(v1)) { document.getElementById('resInterpF')!.textContent = 'Err: completa campos'; return; }
+    const cols = currentTable.meta?.columns || [];
+    let colIdx = 0, minD = Infinity;
+    cols.forEach((c, i) => { const d = Math.abs(Number(c) - v1); if (d < minD) { minD = d; colIdx = i; } });
+    const result = interpolateBetweenRows(currentTable, v2, colIdx);
+    showInterpResult('resInterpF', 'breakdownInterpF', `F_{\\nu_1=${Math.round(v1)},\\nu_2}`, v2, '\\nu_2', result);
+}
+
+function interpolateGamma(): void {
+    const alpha = parseFloat((document.getElementById('inputGammaInterpAlpha') as HTMLInputElement).value);
+    const p = parseFloat((document.getElementById('inputGammaInterpP') as HTMLInputElement).value);
+    if (isNaN(alpha) || isNaN(p)) { document.getElementById('resInterpGamma')!.textContent = 'Err: completa campos'; return; }
+    const colIdx = findColIdx(currentTable, p);
+    const result = interpolateBetweenRows(currentTable, alpha, colIdx);
+    showInterpResult('resInterpGamma', 'breakdownInterpGamma', 'x_{\\alpha,p}', alpha, '\\alpha', result);
+}
+
+/* =============================================
+   Properties Drawer Modal
+   ============================================= */
+
+function openPropsDrawer(): void {
+    const overlay = document.getElementById('propsOverlay')!;
+    const drawer = document.getElementById('propsDrawer')!;
+    const title = document.getElementById('propsDrawerTitle')!;
+    const content = document.getElementById('propsDrawerContent')!;
+    
+    // Switch Tailwind Classes
+    overlay.classList.remove('hidden');
+    drawer.classList.remove('hidden');
+    
+    requestAnimationFrame(() => { 
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+    });
+
+    const type = currentTable.meta?.type || 'normal';
+    title.textContent = `Propiedades — ${currentTable.name}`;
+    content.innerHTML = getPropsContent(type);
+    setTimeout(() => {
+        const k = getKatex();
+        if (k) {
+            content.querySelectorAll('.props-formula').forEach(el => {
+                const tex = el.getAttribute('data-tex');
+                if (tex) try { k.render(tex, el as HTMLElement, { displayMode: true, throwOnError: false }); } catch { /* */ }
+            });
+        }
+    }, 50);
+}
+
+function closePropsDrawer(): void {
+    const overlay = document.getElementById('propsOverlay')!;
+    const drawer = document.getElementById('propsDrawer')!;
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+    drawer.classList.remove('translate-x-0');
+    drawer.classList.add('translate-x-full');
+    setTimeout(() => { 
+        overlay.classList.add('hidden'); 
+        drawer.classList.add('hidden'); 
+    }, 350);
+}
+
+
+function sec(t: string, b: string): string { return `<div class="props-section mb-6"> <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">📐 ${t}</h4> <div class="overflow-x-auto w-full whitespace-normal break-words sm:break-normal">${b}</div> </div>`; }
+
+function fm(tex: string): string { return `<div class="props-formula py-2 text-center overflow-x-auto" data-tex="${tex.replace(/"/g, '&quot;')}"></div>`; }
+
+function li(items: string[]): string { 
+    return `<ul class="props-list list-disc pl-5 space-y-2 text-sm">` + items.map(i => {
+        let text = i;
+        const k = getKatex();
+        if (k && k.renderToString) {
+            text = text.replace(/\$(.*?)\$/g, (match, tex) => {
+                try {
+                    return k.renderToString(tex, { displayMode: false, throwOnError: false });
+                } catch {
+                    return match;
+                }
+            });
+        }
+        return `<li class="break-words whitespace-normal">` + text + `</li>`;
+    }).join('') + `</ul>`;
+}
+
+function getPropsContent(type: string): string {
+    if (type === 'normal') return propsNormal();
+    if (type === 't') return propsT();
+    if (type === 'chi') return propsChi();
+    if (type === 'f') return propsF();
+    if (type === 'gamma') return propsGamma();
+    return '<p>Sin propiedades.</p>';
+}
+
+function propsNormal(): string {
+    return sec('Función de Densidad', fm('f(x) = \\frac{1}{\\sqrt{2\\pi}} e^{-x^2/2}'))
+    + sec('Esperanza y Varianza', fm('E[X] = 0, \\quad \\text{Var}(X) = 1'))
+    + sec('Func. Generadora de Momentos', fm('M_X(t) = e^{t^2/2}'))
+    + sec('Teoremas y Propiedades', li([
+        '<b>TCL:</b> Si $X_1,...,X_n$ i.i.d. con media $\\mu$ y var $\\sigma^2$, $\\bar{X} \\xrightarrow{d} N(\\mu, \\sigma^2/n)$',
+        '<b>Simetría:</b> $P(Z \\le z) = 1 - P(Z \\le -z)$',
+        '<b>Estandarización:</b> $Z = (X-\\mu)/\\sigma \\sim N(0,1)$',
+        '<b>Independencia:</b> $\\bar{X}$ y $S^2$ son independientes bajo normalidad',
+        '<b>Reproductiva:</b> $X_1+X_2 \\sim N(\\mu_1+\\mu_2, \\sigma_1^2+\\sigma_2^2)$ si independientes',
+        '<b>68-95-99.7:</b> $P(|Z|\\le1)\\approx0.683$, $P(|Z|\\le2)\\approx0.954$, $P(|Z|\\le3)\\approx0.997$',
+        '<b>Completitud:</b> La normal es completa y suficiente',
+    ]));
+}
+
+function propsT(): string {
+    return sec('Función de Densidad', fm('f(t) = \\frac{\\Gamma((\\nu+1)/2)}{\\sqrt{\\nu\\pi}\\Gamma(\\nu/2)} (1+t^2/\\nu)^{-(\\nu+1)/2}'))
+    + sec('Esperanza y Varianza', fm('E[T]=0\\;(\\nu>1), \\quad \\text{Var}(T)=\\nu/(\\nu-2)\\;(\\nu>2)'))
+    + sec('Construcción', li([
+        '<b>Def:</b> Si $Z\\sim N(0,1)$ y $V\\sim\\chi^2(\\nu)$ son <b>independientes</b>, $T=Z/\\sqrt{V/\\nu}\\sim t(\\nu)$',
+    ]))
+    + sec('Teoremas y Propiedades', li([
+        '<b>Convergencia:</b> $t(\\nu) \\to N(0,1)$ cuando $\\nu\\to\\infty$',
+        '<b>Simetría:</b> $f(t) = f(-t)$',
+        '<b>Colas pesadas:</b> Mayor curtosis que la normal',
+        '<b>Relación con F:</b> $T^2 \\sim F(1, \\nu)$',
+        '<b>Student-Fisher:</b> $T=(\\bar{X}-\\mu)/(S/\\sqrt{n}) \\sim t(n-1)$ donde $\\bar{X}$ y $S^2$ son independientes',
+        '<b>Independencia:</b> La construcción requiere que $Z$ y $V$ sean independientes',
+        '<b>MGF:</b> No existe en forma cerrada',
+    ]));
+}
+
+function propsChi(): string {
+    return sec('Función de Densidad', fm('f(x) = \\frac{x^{k/2-1}e^{-x/2}}{2^{k/2}\\Gamma(k/2)}, \\; x>0'))
+    + sec('Esperanza y Varianza', fm('E[X]=k, \\quad \\text{Var}(X)=2k'))
+    + sec('Func. Generadora de Momentos', fm('M_X(t) = (1-2t)^{-k/2}'))
+    + sec('Construcción', li([
+        '<b>Def:</b> $\\chi^2 = \\sum Z_i^2$ donde $Z_i\\sim N(0,1)$ <b>independientes</b>',
+    ]))
+    + sec('Teoremas y Propiedades', li([
+        '<b>Aditiva:</b> $\\chi^2(k_1)+\\chi^2(k_2)\\sim\\chi^2(k_1+k_2)$ si <b>independientes</b>',
+        '<b>Rel. con Gamma:</b> $\\chi^2(k) = \\text{Gamma}(k/2, 2)$',
+        '<b>Cochran:</b> Descompone formas cuadráticas en $\\chi^2$ independientes',
+        '<b>Varianza muestral:</b> $(n-1)S^2/\\sigma^2 \\sim \\chi^2(n-1)$, independiente de $\\bar{X}$',
+        '<b>Bondad de ajuste:</b> $\\sum(O_i-E_i)^2/E_i \\sim \\chi^2(k-1)$',
+        '<b>Convergencia:</b> $\\chi^2(k) \\approx N(k, 2k)$ para $k$ grande',
+        '<b>Asimetría:</b> Asimétrica positiva, se simetriza con $k$ grande',
+    ]));
+}
+
+function propsF(): string {
+    return sec('Función de Densidad', fm('f(x) = \\frac{\\sqrt{(d_1 x)^{d_1} d_2^{d_2} / (d_1 x+d_2)^{d_1+d_2}}}{x\\,B(d_1/2,d_2/2)}'))
+    + sec('Esperanza y Varianza', fm('E[F]=\\frac{d_2}{d_2-2}, \\; \\text{Var}=\\frac{2d_2^2(d_1+d_2-2)}{d_1(d_2-2)^2(d_2-4)}'))
+    + sec('Construcción', li([
+        '<b>Def:</b> $F=(U/d_1)/(V/d_2)$ donde $U\\sim\\chi^2(d_1)$, $V\\sim\\chi^2(d_2)$ <b>independientes</b>',
+    ]))
+    + sec('Teoremas y Propiedades', li([
+        '<b>Rel. con t:</b> $T^2 \\sim F(1,\\nu)$',
+        '<b>Recíproco:</b> $1/F \\sim F(d_2,d_1)$',
+        '<b>Convergencia:</b> $d_1 F \\to \\chi^2(d_1)$ cuando $d_2\\to\\infty$',
+        '<b>ANOVA:</b> Compara varianzas de grupos con muestras independientes',
+        '<b>Test varianzas:</b> $S_1^2/S_2^2 \\sim F(n_1-1,n_2-1)$ si muestras independientes y normales',
+        '<b>Asimetría:</b> Asimétrica derecha, $F(d_1,d_2) \\ne F(d_2,d_1)$',
+        '<b>Independencia:</b> $U$ y $V$ deben ser independientes',
+    ]));
+}
+
+function propsGamma(): string {
+    return sec('Función de Densidad', fm('f(x) = \\frac{\\beta^\\alpha}{\\Gamma(\\alpha)} x^{\\alpha-1} e^{-\\beta x}, \\; x>0'))
+    + sec('Esperanza y Varianza', fm('E[X]=\\alpha/\\beta, \\quad \\text{Var}(X)=\\alpha/\\beta^2'))
+    + sec('Func. Generadora de Momentos', fm('M_X(t)=(\\beta/(\\beta-t))^\\alpha'))
+    + sec('Casos Especiales', li([
+        '<b>Exponencial:</b> $\\text{Gamma}(1,\\beta) = \\text{Exp}(\\beta)$',
+        '<b>Chi-cuadrado:</b> $\\chi^2(k) = \\text{Gamma}(k/2, 1/2)$',
+        '<b>Erlang:</b> $\\text{Gamma}(n,\\beta)$ con $n$ entero',
+    ]))
+    + sec('Función Gamma Γ', li([
+        '<b>Def:</b> $\\Gamma(\\alpha)=\\int_0^\\infty x^{\\alpha-1}e^{-x}dx$',
+        '<b>Recursividad:</b> $\\Gamma(\\alpha+1)=\\alpha\\Gamma(\\alpha)$',
+        '<b>Enteros:</b> $\\Gamma(n)=(n-1)!$',
+        '<b>Especial:</b> $\\Gamma(1/2)=\\sqrt{\\pi}$',
+        '<b>Duplicación:</b> $\\Gamma(z)\\Gamma(z+1/2)=\\sqrt{\\pi}\\Gamma(2z)/2^{2z-1}$',
+    ]))
+    + sec('Teoremas y Propiedades', li([
+        '<b>Aditiva:</b> $\\text{Gamma}(\\alpha_1,\\beta)+\\text{Gamma}(\\alpha_2,\\beta)\\sim\\text{Gamma}(\\alpha_1+\\alpha_2,\\beta)$ si <b>independientes</b>, mismo $\\beta$',
+        '<b>Independencia:</b> Requiere variables independientes y mismo parámetro de escala',
+        '<b>Conjugada:</b> Previa conjugada para tasa Poisson y precisión Normal',
+        '<b>Convergencia:</b> $\\approx N(\\alpha/\\beta, \\alpha/\\beta^2)$ para $\\alpha$ grande',
+        '<b>Memorylessness:</b> Solo $\\alpha=1$ (exponencial) tiene falta de memoria',
+        '<b>Escalamiento:</b> $cX \\sim \\text{Gamma}(\\alpha, \\beta/c)$',
+    ]));
+}
+
+    document.getElementById('btnInvInterpT')?.addEventListener('click', interpolateTInverse);
+    document.getElementById('btnInvInterpChi')?.addEventListener('click', interpolateChiInverse);
+    document.getElementById('btnInvInterpGamma')?.addEventListener('click', interpolateGammaInverse);
+    
+    // Lightbox
+    document.querySelectorAll('#imageContainer img').forEach(img => {
+        img.addEventListener('click', () => {
+            const lightbox = document.getElementById('lightboxOverlay');
+            const lightboxImg = document.getElementById('lightboxImg');
+            if(lightbox && lightboxImg) {
+                lightboxImg.setAttribute('src', img.getAttribute('src') || '');
+                lightbox.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    lightbox.classList.remove('opacity-0');
+                    lightboxImg.classList.remove('scale-95');
+                });
+            }
+        });
+    });
+    document.getElementById('closeLightbox')?.addEventListener('click', closeLightbox);
+    document.getElementById('lightboxOverlay')?.addEventListener('click', (e) => {
+        if(e.target === e.currentTarget) closeLightbox();
+    });
+
+
+
+
+/* =============================================
+   Interpolación Inversa para tablas (columnas)
+   ============================================= */
+function closeLightbox() {
+    const lightbox = document.getElementById('lightboxOverlay');
+    const lightboxImg = document.getElementById('lightboxImg');
+    if(lightbox && lightboxImg) {
+        lightbox.classList.add('opacity-0');
+        lightboxImg.classList.add('scale-95');
+        setTimeout(() => lightbox.classList.add('hidden'), 300);
+    }
+}
+
+function interpolateInverseRow(table: DistTable, targetRow: number, targetVal: number): { val: number; lo: { a: number; v: number }; hi: { a: number; v: number }; exact: boolean; approxGl: string } | null {
+    const rows = getSortedRowKeys(table);
+    if (rows.length === 0) return null;
+    let rKey = rows[0].key;
+    let bestDist = Infinity;
+    for(const r of rows) {
+        if(Math.abs(r.num - targetRow) < bestDist) {
+            bestDist = Math.abs(r.num - targetRow);
+            rKey = r.key;
+        }
+    }
+    
+    const rowVals = table.rowData[rKey];
+    const alphas = (table.meta?.columns || []).map(Number);
+    let parsedVals = rowVals.map(Number);
+    let pairs = alphas.map((a, i) => ({ a, v: parsedVals[i] })).sort((A, B) => A.v - B.v);
+    
+    for(let i = 0; i < pairs.length; i++) {
+        if (Math.abs(pairs[i].v - targetVal) < 1e-9) {
+            return { val: pairs[i].a, lo: pairs[i], hi: pairs[i], exact: true, approxGl: rKey };
+        }
+    }
+    
+    let lo = pairs[0], hi = pairs[pairs.length - 1];
+    for (let i = 0; i < pairs.length - 1; i++) {
+        if (targetVal >= pairs[i].v && targetVal <= pairs[i+1].v) {
+            lo = pairs[i]; hi = pairs[i+1]; break;
+        }
+    }
+    if(hi.v === lo.v) return { val: lo.a, lo, hi, exact: true, approxGl: rKey };
+    
+    const val = lo.a + ((targetVal - lo.v) / (hi.v - lo.v)) * (hi.a - lo.a);
+    return { val, lo, hi, exact: false, approxGl: rKey };
+}
+
+
+
+function showInvInterpResult(resId: string, bdId: string, label: string, targetVal: number, result: ReturnType<typeof interpolateInverseRow>): void {
+    const resEl = document.getElementById(resId)!;
+    const bdEl = document.getElementById(bdId)!;
+    if (!result) { resEl.textContent = 'No encontrado'; bdEl.textContent = ''; return; }
+    
+    const { val, lo, hi, exact, approxGl } = result;
+    renderKaTeXInto(resEl, `${label} \\approx ${val.toPrecision(4)}`, false);
+    
+    if (exact) {
+        renderKaTeXInto(bdEl, `\\text{Exacto en tabla para gl } \\approx ${approxGl}`, true);
+    } else {
+        const tableHtml = `
+            <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Desglose Regla de Tres</p>
+                <div class="overflow-x-auto w-full mb-4">
+                    <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
+                        <thead class="bg-slate-100 dark:bg-slate-700">
+                            <tr><th>Punto</th><th class="whitespace-nowrap">Extremo</th><th class="whitespace-nowrap">Res</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-100 dark:border-slate-700">
+                                <td class="font-semibold text-slate-500">Izq.</td>
+                                <td>${lo.v.toFixed(4)}</td><td>${lo.a.toPrecision(4)}</td>
+                            </tr>
+                            <tr class="bg-teal-50/50 dark:bg-teal-900/20 font-semibold text-teal-700 dark:text-teal-400">
+                                <td>Buscado</td>
+                                <td>${targetVal.toFixed(4)}</td><td>${val.toPrecision(4)}</td>
+                            </tr>
+                            <tr>
+                                <td class="font-semibold text-slate-500">Der.</td>
+                                <td>${hi.v.toFixed(4)}</td><td>${hi.a.toPrecision(4)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
+                <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
+            </div>
+        `;
+        bdEl.innerHTML = tableHtml;
+        const formulaEl = document.getElementById(bdId + '_formula')!;
+        renderKaTeXInto(formulaEl, `\\begin{aligned} ${label} &= ${lo.a.toPrecision(4)} + \\dfrac{${targetVal.toFixed(4)} - ${lo.v.toFixed(4)}}{${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}} \\cdot (${hi.a.toPrecision(4)} - ${lo.a.toPrecision(4)}) \\\\ &\\approx ${val.toPrecision(4)} \\end{aligned}`, true);
+    }
+}
+function interpolateTInverse(): void {
+    const gl = parseFloat((document.getElementById('inputTInvGl') as HTMLInputElement).value);
+    const t = parseFloat((document.getElementById('inputTInvT') as HTMLInputElement).value);
+    if (isNaN(gl) || isNaN(t)) return;
+    const result = interpolateInverseRow(currentTable, gl, Math.abs(t));
+    showInvInterpResult('resInvInterpT', 'breakdownInvInterpT', '\\alpha', Math.abs(t), result);
+}
+
+function interpolateChiInverse(): void {
+    const gl = parseFloat((document.getElementById('inputChiInvGl') as HTMLInputElement).value);
+    const chi = parseFloat((document.getElementById('inputChiInvChi') as HTMLInputElement).value);
+    if (isNaN(gl) || isNaN(chi)) return;
+    const result = interpolateInverseRow(currentTable, gl, chi);
+    showInvInterpResult('resInvInterpChi', 'breakdownInvInterpChi', '\\alpha', chi, result);
+}
+
+function interpolateGammaInverse(): void {
+    const alpha = parseFloat((document.getElementById('inputGammaInvAlpha') as HTMLInputElement).value);
+    const x = parseFloat((document.getElementById('inputGammaInvX') as HTMLInputElement).value);
+    if (isNaN(alpha) || isNaN(x)) return;
+    const result = interpolateInverseRow(currentTable, alpha, x);
+    showInvInterpResult('resInvInterpGamma', 'breakdownInvInterpGamma', 'p', x, result);
 }

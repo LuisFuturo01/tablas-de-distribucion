@@ -8,7 +8,7 @@ export interface DistTable {
   zMax: number;
   
   meta?: {
-    type: "normal" | "t" | "chi" | "f";
+    type: "normal" | "t" | "chi" | "f" | "gamma";
     columns?: number[];
     extraDims?: any;
   };

@@ -299,6 +299,133 @@ th{
 .dark .breakdown-table th, .dark .breakdown-table td { border-color: var(--color-slate-600); }
 
 /* =============================================
+   Properties Drawer Modal
+   ============================================= */
+.props-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.props-overlay.active {
+    opacity: 1;
+}
+
+.props-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(520px, 92vw);
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-left: 1px solid rgba(148, 163, 184, 0.3);
+    box-shadow: -8px 0 40px rgba(15, 23, 42, 0.15);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.dark .props-drawer {
+    background: rgba(15, 23, 42, 0.95);
+    border-left-color: rgba(71, 85, 105, 0.4);
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.4);
+}
+.props-drawer.active {
+    transform: translateX(0);
+}
+
+.props-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    flex-shrink: 0;
+}
+
+.props-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
+}
+.props-drawer-body::-webkit-scrollbar { width: 6px; }
+.props-drawer-body::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 999px; }
+
+.props-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(248, 250, 252, 0.6);
+}
+.dark .props-section {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(71, 85, 105, 0.3);
+}
+
+.props-section h4 {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.dark .props-section h4 { color: #818cf8; }
+
+.props-section .katex-display {
+    margin: 0.5rem 0;
+    overflow-x: auto;
+}
+
+.props-formula {
+    background: white;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+    text-align: center;
+}
+.dark .props-formula {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(71, 85, 105, 0.3);
+}
+
+.props-list {
+    list-style: none;
+    padding: 0;
+}
+.props-list li {
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
+    color: #475569;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+.dark .props-list li { color: #94a3b8; }
+.props-list li::before {
+    content: "›";
+    color: #6366f1;
+    font-weight: 700;
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+.dark .props-list li::before { color: #818cf8; }
+
+/* =============================================
    IMPRESIÓN – @media print
    Todo debe caber en 1 sola hoja letter landscape
    ============================================= */
@@ -493,4 +620,13 @@ th{
     .tabla-container {
         page-break-inside: avoid;
     }
+}
+
+
+/* Properties Drawer Animations */
+#propsOverlay.active {
+    opacity: 1;
+}
+#propsDrawer.active {
+    transform: translateX(0);
 }

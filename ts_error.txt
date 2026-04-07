@@ -1,0 +1,2 @@
+src/main.ts(1487,20): error TS2339: Property 'renderToString' does not exist on type 'KatexApi'.
+src/main.ts(1490,30): error TS2339: Property 'renderToString' does not exist on type 'KatexApi'.
