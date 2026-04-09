@@ -13,47 +13,47 @@
 
 
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans p-2 md:p-4 transition-colors duration-200 dark:bg-[#0b1120] dark:text-slate-100 flex flex-col min-h-screen">
+<body class="bg-white text-slate-800 font-sans p-2 md:p-6 transition-colors duration-200 dark:bg-[#0b1120] dark:text-slate-100 flex flex-col min-h-screen">
 
     <div class="max-w-[1500px] w-full mx-auto flex-grow flex flex-col container-full">
         
-        <!-- Controles Top -->
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 no-print border-b border-slate-200 dark:border-slate-800 pb-3 buttons">
+        <!-- Top Bar — minimal -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-5 no-print border-b border-slate-100 dark:border-slate-800 pb-3 buttons">
             
-            <div class="flex flex-col gap-2 w-full sm:flex-1 sm:max-w-2xl">
-                <label for="tableSelector" class="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <div class="flex flex-col gap-1.5 w-full sm:flex-1 sm:max-w-md">
+                <label for="tableSelector" class="field-label flex items-center gap-1.5">
                     Distribución
                 </label>
-                <select id="tableSelector" aria-label="Elegir tabla de probabilidad" class="table-select w-full max-w-xl min-h-[48px] px-4 py-3 text-base rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-[#1f2937] text-slate-900 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <select id="tableSelector" aria-label="Elegir tabla de probabilidad" class="select-min">
                     <option value="">Cargando…</option>
                 </select>
             </div>
 
-            <div class="prueba flex justify-end gap-3 w-full sm:w-auto">
-                <button id="btnOpenProps" class="bg-purple-600 text-white hover:bg-purple-700 hover:shadow-md px-4 py-2 rounded-lg shadow-sm text-sm font-semibold flex items-center gap-2 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <div class="prueba flex justify-end gap-2 w-full sm:w-auto">
+                <button id="btnOpenProps" class="btn-min btn-min-accent">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                     <span>Propiedades</span>
                 </button>
-                <button id="toggleDarkMode" class="bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2 rounded-lg shadow-sm text-sm font-semibold transition-all flex items-center gap-2">
-                    <svg id="icon-moon" class="w-5 h-5 text-slate-600 dark:text-slate-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    <span id="darkText" class="text-slate-700 dark:text-slate-300">Modo Oscuro</span>
+                <button id="toggleDarkMode" class="btn-min btn-min-ghost">
+                    <svg id="icon-moon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <span id="darkText">Oscuro</span>
                 </button>
-                <button id="btnDownloadPdf" class="bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md px-4 py-2 rounded-lg shadow-sm text-sm font-semibold flex items-center gap-2 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span>Descargar PDF</span>
+                <button id="btnDownloadPdf" class="btn-min btn-min-primary">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>PDF</span>
                 </button>
-                <button onclick="window.print()" class="bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md px-4 py-2 rounded-lg shadow-sm text-sm font-semibold flex items-center gap-2 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <button onclick="window.print()" class="btn-min btn-min-ghost">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     <span>Imprimir</span>
                 </button>
             </div>
         </div>
 
+        <!-- Header -->
         <header class="mb-4 text-center md:text-left">
-            <h1 id="tableTitle" class="text-3xl md:text-4xl font-extrabold text-indigo-900 dark:text-indigo-400 tracking-tight">Cargando Tabla...</h1>
-            <p id="tableDesc" class="text-slate-600 dark:text-slate-400 mt-2 text-lg">...</p>
-            <p id="cacheStatus" class="text-xs text-slate-500 dark:text-slate-400 mt-1 min-h-[1.1rem]"></p>
+            <h1 id="tableTitle" class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Cargando Tabla...</h1>
+            <p id="tableDesc" class="text-slate-500 dark:text-slate-400 mt-1 text-sm">...</p>
+            <p id="cacheStatus" class="text-xs text-slate-400 mt-1 min-h-[1.1rem]"></p>
             
             <div id="imageContainer" class="mt-4 xl:mt-6 flex flex-wrap gap-4 md:gap-8 items-center justify-center w-full">
                 <img id="img1" src="/img/espera.webp" alt="Ilustración Principal" class="w-32 h-24 sm:w-40 sm:h-28 object-contain bg-white dark:bg-[#1f2937] p-2 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-sm">
@@ -61,7 +61,7 @@
             </div>
         </header>
 
-        <!-- Tabla Dividida -->
+        <!-- Tabla Dividida (NO TOCAR) -->
         <div class="mb-4 xl:mb-8 w-full transition-colors duration-200 tabla-container">
             <div class="tabla-container-tab">
                 
@@ -92,264 +92,264 @@
             </div>
         </div>
 
-        <!-- Calculadora de Interpolación Abajo (No se imprime) -->
-        <div id="calculatorSection" class="bg-indigo-50/50 dark:bg-[#1f2937] border-2 border-indigo-100 dark:border-slate-700 rounded-2xl p-6 mb-8 no-print shadow-sm transition-colors duration-200 calculadora">
-            <h2 id="calculatorTitle" class="text-xl font-bold text-indigo-900 dark:text-indigo-300 mb-6 flex items-center gap-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        <!-- =========================================
+             CALCULADORA — Minimal
+        ============================================= -->
+        <div id="calculatorSection" class="no-print calculadora">
+            <h2 id="calculatorTitle" class="calc-title">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 Calculadora
             </h2>
             
-            <div id="toolsNormal" class="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 w-full">
+            <!-- ======= NORMAL ======= -->
+            <div id="toolsNormal" class="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
                 
                 <!-- Probabilidad -->
-                <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full h-full">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Encontrar Probabilidad interpolada (dado $z$)</label>
-                    <p class="text-[0.7rem] text-indigo-500 mb-2 font-medium">Nota: $P(Z \le z) = P(Z \ge -z)$</p>
+                <div class="calc-card flex flex-col w-full h-full">
+                    <span class="calc-card-label">Probabilidad interpolada (dado z)</span>
+                    <p class="calc-note">$P(Z \le z) = P(Z \ge -z)$</p>
                     <div class="flex gap-2">
-                        <input type="number" id="inputZ" step="0.0001" placeholder="Ej: 1.2550 (4 decimales)" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
-                        <button id="btnCalcP" class="bg-indigo-600 text-white px-5 py-2 font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors cursor-pointer">Calcular</button>
+                        <input type="number" id="inputZ" step="0.0001" placeholder="Ej: 1.2550" class="input-min">
+                        <button id="btnCalcP" class="btn-calc btn-calc-dark whitespace-nowrap">Calcular</button>
                     </div>
                     
-                    <div class="mt-4 p-4 bg-slate-50 dark:bg-[#1f2937]/50 rounded-lg border border-slate-100 dark:border-slate-700 flex-grow">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400 shrink-0">Resultado</p>
-                            <div id="resP" class="result-math text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-400 min-h-[2rem] flex items-center justify-end sm:justify-end">--</div>
+                    <div class="calc-result-area flex-grow">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                            <span class="calc-result-label">Resultado</span>
+                            <div id="resP" class="calc-result-value result-math justify-end sm:justify-end">--</div>
                         </div>
                         
-                        <!-- Panel de Desglose Matemático P -->
-                        <div id="panelBreakdownP" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-slate-600">
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Regla de tres proporcional</p>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Anterior y siguiente de la tabla; en medio el valor que buscas (misma razón entre <span class="font-semibold">Δz</span> y <span class="font-semibold">ΔP</span>).</p>
-                            <div class="overflow-x-auto w-full mb-4">
-                                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1f2937]">
-                                    <thead class="bg-slate-100 dark:bg-slate-700">
+                        <div id="panelBreakdownP" class="hidden calc-breakdown">
+                            <p class="calc-breakdown-title">Regla de tres proporcional</p>
+                            <p class="text-[0.625rem] text-slate-400 mb-2">Anterior y siguiente de tabla; en medio el valor buscado.</p>
+                            <div class="overflow-x-auto w-full mb-3">
+                                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-[#111827]">
+                                    <thead class="bg-slate-50 dark:bg-slate-800">
                                         <tr><th></th><th class="whitespace-nowrap">z</th><th class="whitespace-nowrap">P(Z ≤ z)</th></tr>
                                     </thead>
                                     <tbody id="pBreakdownBody"></tbody>
                                 </table>
                             </div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
-                            <div id="pBreakdownSymbolic" class="text-sm text-center bg-white dark:bg-[#111827] p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto"></div>
+                            <p class="calc-breakdown-title">Cálculo con valores sustituidos</p>
+                            <div id="pBreakdownSymbolic" class="text-sm text-center bg-white dark:bg-[#0f172a] p-2 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Z Inverso -->
-                <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full h-full">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Encontrar Z interpolada (dada Probabilidad)</label>
+                <div class="calc-card flex flex-col w-full h-full">
+                    <span class="calc-card-label">Z interpolada (dada Probabilidad)</span>
                     <div class="flex gap-2">
-                        <input type="number" id="inputP" step="0.0001" min="0" max="1" placeholder="P entre 0 y 1 (0 y 1 = colas)" class="p-3 border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 transition-all outline-none">
-                        <button id="btnCalcZ" class="bg-teal-600 text-white px-5 py-2 font-medium rounded-lg hover:bg-teal-700 shadow-sm transition-colors cursor-pointer">Calcular</button>
+                        <input type="number" id="inputP" step="0.0001" min="0" max="1" placeholder="P entre 0 y 1" class="input-min">
+                        <button id="btnCalcZ" class="btn-calc btn-calc-dark whitespace-nowrap">Calcular</button>
                     </div>
                     
-                    <div class="mt-4 p-4 bg-slate-50 dark:bg-[#1f2937]/50 rounded-lg border border-slate-100 dark:border-slate-700 flex-grow">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400 shrink-0">Resultado</p>
-                            <div id="resZ" class="result-math text-lg sm:text-xl font-bold text-teal-700 dark:text-teal-400 min-h-[2rem] flex items-center justify-end">--</div>
+                    <div class="calc-result-area flex-grow">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                            <span class="calc-result-label">Resultado</span>
+                            <div id="resZ" class="calc-result-value result-math justify-end">--</div>
                         </div>
                         
-                        <!-- Panel de Desglose Matemático Z -->
-                        <div id="panelBreakdownZ" class="hidden mt-4 pt-4 border-t border-slate-200 dark:border-slate-600">
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Regla de tres proporcional</p>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Anterior y siguiente de la tabla; en medio la probabilidad dada y la <span class="font-semibold">z</span> que interpolas.</p>
-                            <div class="overflow-x-auto w-full mb-4">
-                                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1f2937]">
-                                    <thead class="bg-slate-100 dark:bg-slate-700">
+                        <div id="panelBreakdownZ" class="hidden calc-breakdown">
+                            <p class="calc-breakdown-title">Regla de tres proporcional</p>
+                            <p class="text-[0.625rem] text-slate-400 mb-2">Anterior y siguiente de la tabla; en medio la probabilidad dada.</p>
+                            <div class="overflow-x-auto w-full mb-3">
+                                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-[#111827]">
+                                    <thead class="bg-slate-50 dark:bg-slate-800">
                                         <tr><th></th><th class="whitespace-nowrap">P(Z ≤ z)</th><th class="whitespace-nowrap">z</th></tr>
                                     </thead>
                                     <tbody id="zBreakdownBody"></tbody>
                                 </table>
                             </div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
-                            <div id="zBreakdownSymbolic" class="text-sm text-center bg-white dark:bg-[#111827] p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto"></div>
+                            <p class="calc-breakdown-title">Cálculo con valores sustituidos</p>
+                            <div id="zBreakdownSymbolic" class="text-sm text-center bg-white dark:bg-[#0f172a] p-2 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             
-            <!-- T-STUDENT -->
-            <div id="toolsTStudent" class="hidden flex-col gap-6 w-full">
+            <!-- ======= T-STUDENT ======= -->
+            <div id="toolsTStudent" class="hidden flex-col gap-4 w-full">
                 <!-- Interpolation T -->
-                <div class="bg-indigo-50/30 dark:bg-[#1f2937]/60 rounded-2xl p-6 border border-indigo-100 dark:border-slate-700/60 shadow-sm w-full flex flex-col gap-6">
-                    <h3 class="text-base font-bold text-indigo-900 dark:text-indigo-400 flex items-center gap-2">Interpolación T</h3>
+                <div class="calc-card w-full flex flex-col gap-4">
+                    <span class="calc-section-title">Interpolación T</span>
                     
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                         <!-- Directa -->
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Directa: Hallar valor crítico (dado gl y α)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="number" id="inputTInterpGl" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">α (cola der)</label><input type="number" id="inputTInterpAlpha" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Directa: valor crítico (gl, α)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">gl</span><input type="number" id="inputTInterpGl" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">α (cola der)</span><input type="number" id="inputTInterpAlpha" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInterpT" class="bg-indigo-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-indigo-700 shadow-sm transition-colors w-full mt-auto">Interpolar</button>
-                            <div id="resInterpT" class="mt-4 text-center font-bold text-xl text-indigo-700 dark:text-indigo-400">--</div>
-                            <div id="breakdownInterpT" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInterpT" class="btn-calc btn-calc-dark w-full mt-auto">Interpolar</button>
+                            <div id="resInterpT" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInterpT" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
 
                         <!-- Inversa -->
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Inversa: Hallar α (dado gl y t crítico)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="number" id="inputTInvGl" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">Valor t</label><input type="number" id="inputTInvT" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Inversa: hallar α (gl, t crítico)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">gl</span><input type="number" id="inputTInvGl" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">Valor t</span><input type="number" id="inputTInvT" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInvInterpT" class="bg-teal-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-teal-700 shadow-sm transition-colors w-full mt-auto">Interpolar α</button>
-                            <div id="resInvInterpT" class="mt-4 text-center font-bold text-xl text-teal-700 dark:text-teal-400">--</div>
-                            <div id="breakdownInvInterpT" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInvInterpT" class="btn-calc btn-calc-outline w-full mt-auto">Interpolar α</button>
+                            <div id="resInvInterpT" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInvInterpT" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
                     </div>
                 </div>
-
-                
                 
                 <!-- Gamma Function -->
-                <div class="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center gap-4 w-full">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 text-center">Calculadora Función Gamma Γ(s)</label>
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
-                        <input type="number" id="inputGammaChi" step="0.01" placeholder="Ej: 3.5" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full max-w-[12rem] dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none text-center">
-                        <button id="btnGammaChi" class="bg-violet-600 text-white px-4 py-2 sm:py-2.5 text-sm font-medium rounded-lg hover:bg-violet-700 shadow-sm transition-colors w-full max-w-[12rem] sm:w-auto">Calcular Γ</button>
+                <div class="gamma-section w-full">
+                    <span class="calc-card-label text-center">Función Gamma Γ(s)</span>
+                    <div class="flex gap-2 w-full max-w-md items-end">
+                        <div class="flex-grow"><span class="field-label">Expresión (número o con variable s)</span><input type="text" id="inputGammaChi" placeholder="Ej: 5, s+1, s+2, s/2" class="input-min text-center"></div>
+                        <button id="btnGammaChi" class="btn-calc btn-calc-dark whitespace-nowrap">Calcular Γ</button>
                     </div>
-                    <div id="resGammaChi" class="text-center font-bold text-lg text-violet-700 dark:text-violet-400 mt-2 min-h-[2rem] w-full flex items-center justify-center">--</div>
+                    <div id="resGammaChi" class="text-center font-semibold text-base calc-result-value justify-center min-h-[1.5rem] w-full">--</div>
                 </div>
+
                 <!-- Hypothesis -->
-                <div class="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full">
-                    <label class="block text-base font-bold text-slate-700 dark:text-slate-300 mb-4">Prueba de Hipótesis (Contraste t)</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-5">
-                        <div><label class="text-xs text-slate-500 mb-1 block">Estadístico t</label><input type="number" id="inputTCalc" step="0.001" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
-                        <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="text" id="inputTGl" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
-                        <div><label class="text-xs text-slate-500 mb-1 block">Significancia α</label><input type="number" id="inputTAlpha" step="0.001" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
+                <div class="calc-card w-full flex flex-col">
+                    <span class="calc-section-title">Prueba de Hipótesis — Contraste t</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                        <div><span class="field-label">Estadístico t</span><input type="number" id="inputTCalc" step="0.001" class="input-min"></div>
+                        <div><span class="field-label">gl</span><input type="text" id="inputTGl" class="input-min"></div>
+                        <div><span class="field-label">α</span><input type="number" id="inputTAlpha" step="0.001" class="input-min"></div>
                         <div>
-                            <label class="text-xs text-slate-500 mb-1 block">Cola</label>
-                            <select id="selectTTail" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white">
+                            <span class="field-label">Cola</span>
+                            <select id="selectTTail" class="select-min !min-h-[34px] !text-[0.8125rem]">
                                 <option value="two">Bilateral</option>
-                                <option value="right">Unilateral Derecha</option>
-                                <option value="left">Unilateral Izquierda</option>
+                                <option value="right">Derecha</option>
+                                <option value="left">Izquierda</option>
                             </select>
                         </div>
                     </div>
-                    <button id="btnCalcT" class="bg-indigo-600 text-white px-4 py-2 sm:px-6 sm:py-2.5 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-indigo-700 shadow-sm w-full md:w-auto self-center lg:self-start">Evaluar Hipótesis</button>
-                    <div class="mt-6 flex flex-col md:flex-row gap-4 items-center">
-                        <div id="resT" class="text-center font-bold text-xl text-slate-700 dark:text-slate-200">--</div>
-                        <div id="breakdownT" class="flex-grow text-sm bg-slate-50 dark:bg-[#1f2937] p-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal md:text-left whitespace-normal break-words sm:break-normal">Esperando...</div>
+                    <button id="btnCalcT" class="btn-calc btn-calc-dark w-full sm:w-auto self-start">Evaluar</button>
+                    <div class="mt-4 flex flex-col md:flex-row gap-3 items-center">
+                        <div id="resT" class="hyp-result">--</div>
+                        <div id="breakdownT" class="flex-grow text-sm bg-slate-50 dark:bg-[#0f172a] p-3 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal md:text-left">Esperando...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- CHI-CUADRADO -->
-            <div id="toolsChiSquare" class="hidden flex-col gap-6 w-full">
+            <!-- ======= CHI-CUADRADO ======= -->
+            <div id="toolsChiSquare" class="hidden flex-col gap-4 w-full">
                 <!-- Interpolation Chi -->
-                <div class="bg-emerald-50/30 dark:bg-[#1f2937]/60 rounded-2xl p-6 border border-emerald-100 dark:border-slate-700/60 shadow-sm w-full flex flex-col gap-6">
-                    <h3 class="text-base font-bold text-emerald-900 dark:text-emerald-400 flex items-center gap-2">Interpolación χ²</h3>
+                <div class="calc-card w-full flex flex-col gap-4">
+                    <span class="calc-section-title">Interpolación χ²</span>
                     
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Directa: Hallar valor crítico (dado gl y α)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="number" id="inputChiInterpGl" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">α (cola der)</label><input type="number" id="inputChiInterpAlpha" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Directa: valor crítico (gl, α)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">gl</span><input type="number" id="inputChiInterpGl" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">α (cola der)</span><input type="number" id="inputChiInterpAlpha" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInterpChi" class="bg-emerald-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-emerald-700 shadow-sm transition-colors w-full mt-auto">Interpolar</button>
-                            <div id="resInterpChi" class="mt-4 text-center font-bold text-xl text-emerald-700 dark:text-emerald-400">--</div>
-                            <div id="breakdownInterpChi" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInterpChi" class="btn-calc btn-calc-dark w-full mt-auto">Interpolar</button>
+                            <div id="resInterpChi" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInterpChi" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
 
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Inversa: Hallar α (dado gl y χ² crítico)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="number" id="inputChiInvGl" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">Valor χ²</label><input type="number" id="inputChiInvChi" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Inversa: hallar α (gl, χ² crítico)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">gl</span><input type="number" id="inputChiInvGl" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">Valor χ²</span><input type="number" id="inputChiInvChi" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInvInterpChi" class="bg-teal-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-teal-700 shadow-sm transition-colors w-full mt-auto">Interpolar α</button>
-                            <div id="resInvInterpChi" class="mt-4 text-center font-bold text-xl text-teal-700 dark:text-teal-400">--</div>
-                            <div id="breakdownInvInterpChi" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInvInterpChi" class="btn-calc btn-calc-outline w-full mt-auto">Interpolar α</button>
+                            <div id="resInvInterpChi" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInvInterpChi" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Gamma Function -->
-                <div class="bg-white dark:bg-[#111827] rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-center gap-4 w-full">
-                    <div class="flex-grow">
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Función Gamma Γ(s)</label>
-                        <input type="number" id="inputGammaChi" step="0.01" placeholder="Ej: 4.5" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full max-w-xs dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none">
+                <div class="gamma-section w-full">
+                    <span class="calc-card-label text-center">Función Gamma Γ(s)</span>
+                    <div class="flex gap-2 w-full max-w-md items-end">
+                        <div class="flex-grow"><span class="field-label">Expresión (número o con variable s)</span><input type="text" id="inputGammaChi2" placeholder="Ej: 5, s+1, s+2, s/2" class="input-min text-center"></div>
+                        <button id="btnGammaChi2" class="btn-calc btn-calc-dark whitespace-nowrap">Calcular Γ</button>
                     </div>
-                    <button id="btnGammaChi" class="bg-violet-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-violet-700 shadow-sm mt-5 sm:mt-0 whitespace-nowrap">Calcular Γ</button>
-                    <div id="resGammaChi" class="w-full sm:w-1/3 text-center sm:text-right font-bold text-lg text-violet-700 dark:text-violet-400 mt-2 sm:mt-0">--</div>
+                    <div id="resGammaChi2" class="text-center font-semibold text-base calc-result-value justify-center min-h-[1.5rem] w-full">--</div>
                 </div>
 
                 <!-- Hypothesis -->
-                <div class="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col w-full">
-                    <label class="block text-base font-bold text-slate-700 dark:text-slate-300 mb-4">Prueba de Hipótesis (Contraste χ²)</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-                        <div><label class="text-xs text-slate-500 mb-1 block">Estadístico χ²</label><input type="number" id="inputChiCalc" step="0.001" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
-                        <div><label class="text-xs text-slate-500 mb-1 block">Grados lib. (gl)</label><input type="number" id="inputChiGl" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
-                        <div><label class="text-xs text-slate-500 mb-1 block">Significancia α</label><input type="number" id="inputChiAlpha" step="0.001" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white"></div>
+                <div class="calc-card w-full flex flex-col">
+                    <span class="calc-section-title">Prueba de Hipótesis — Contraste χ²</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                        <div><span class="field-label">Estadístico χ²</span><input type="number" id="inputChiCalc" step="0.001" class="input-min"></div>
+                        <div><span class="field-label">gl</span><input type="number" id="inputChiGl" class="input-min"></div>
+                        <div><span class="field-label">α</span><input type="number" id="inputChiAlpha" step="0.001" class="input-min"></div>
                     </div>
-                    <button id="btnCalcChi" class="bg-emerald-600 text-white px-4 py-2 sm:px-6 sm:py-2.5 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-emerald-700 shadow-sm w-full md:w-auto self-center lg:self-start">Evaluar Hipótesis</button>
-                    <div class="mt-6 flex flex-col md:flex-row gap-4 items-center">
-                        <div id="resChi" class="text-center font-bold text-xl text-slate-700 dark:text-slate-200">--</div>
-                        <div id="breakdownChi" class="flex-grow text-sm bg-slate-50 dark:bg-[#1f2937] p-4 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal md:text-left whitespace-normal break-words sm:break-normal">Esperando...</div>
+                    <button id="btnCalcChi" class="btn-calc btn-calc-dark w-full sm:w-auto self-start">Evaluar</button>
+                    <div class="mt-4 flex flex-col md:flex-row gap-3 items-center">
+                        <div id="resChi" class="hyp-result">--</div>
+                        <div id="breakdownChi" class="flex-grow text-sm bg-slate-50 dark:bg-[#0f172a] p-3 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal md:text-left">Esperando...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- F-FISHER -->
-            <div id="toolsFisher" class="hidden flex-col gap-6 w-full">
-                <div class="bg-amber-50/30 dark:bg-[#1f2937]/60 rounded-2xl p-6 border border-amber-100 dark:border-slate-700/60 shadow-sm w-full flex flex-col gap-6">
-                    <h3 class="text-base font-bold text-amber-900 dark:text-amber-400 flex items-center gap-2">Interpolación F de Fisher</h3>
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full col-span-1 xl:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Directa: Hallar valor crítico (dado ν2 y ν1)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">ν1 (numerador)</label><input type="number" id="inputFInterpV1" step="0.1" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">ν2 (denominador)</label><input type="number" id="inputFInterpV2" step="1" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+            <!-- ======= F-FISHER ======= -->
+            <div id="toolsFisher" class="hidden flex-col gap-4 w-full">
+                <div class="calc-card w-full flex flex-col gap-4">
+                    <span class="calc-section-title">Interpolación F de Fisher</span>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div class="calc-card flex flex-col h-full col-span-1 xl:col-span-2">
+                            <span class="calc-card-label">Directa: valor crítico (ν2 y ν1)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">ν1 (numerador)</span><input type="number" id="inputFInterpV1" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">ν2 (denominador)</span><input type="number" id="inputFInterpV2" step="1" class="input-min"></div>
                             </div>
-                            <button id="btnInterpF" class="bg-amber-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-amber-700 shadow-sm transition-colors w-full mt-auto">Interpolar</button>
-                            <div id="resInterpF" class="mt-4 text-center font-bold text-xl text-amber-700 dark:text-amber-400">--</div>
-                            <div id="breakdownInterpF" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInterpF" class="btn-calc btn-calc-dark w-full mt-auto">Interpolar</button>
+                            <div id="resInterpF" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInterpF" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- GAMMA DISTRIBUTION -->
-            <div id="toolsGamma" class="hidden flex-col gap-6 w-full">
-                <div class="bg-rose-50/30 dark:bg-[#1f2937]/60 rounded-2xl p-6 border border-rose-100 dark:border-slate-700/60 shadow-sm w-full flex flex-col gap-6">
-                    <h3 class="text-base font-bold text-rose-900 dark:text-rose-400 flex items-center gap-2">Interpolación Gamma</h3>
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Directa: Hallar crítico (dado α y p)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Parámetro forma (α)</label><input type="number" id="inputGammaInterpAlpha" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">Prob p</label><input type="number" id="inputGammaInterpP" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+            <!-- ======= GAMMA DISTRIBUTION ======= -->
+            <div id="toolsGamma" class="hidden flex-col gap-4 w-full">
+                <div class="calc-card w-full flex flex-col gap-4">
+                    <span class="calc-section-title">Interpolación Gamma</span>
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Directa: hallar crítico (α, p)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">Parámetro forma (α)</span><input type="number" id="inputGammaInterpAlpha" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">Prob p</span><input type="number" id="inputGammaInterpP" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInterpGamma" class="bg-rose-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-rose-700 shadow-sm transition-colors w-full mt-auto">Interpolar</button>
-                            <div id="resInterpGamma" class="mt-4 text-center font-bold text-xl text-rose-700 dark:text-rose-400">--</div>
-                            <div id="breakdownInterpGamma" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInterpGamma" class="btn-calc btn-calc-dark w-full mt-auto">Interpolar</button>
+                            <div id="resInterpGamma" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInterpGamma" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
 
-                        <div class="bg-white dark:bg-[#111827] rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Inversa: Hallar p (dado α y x crítico)</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                <div><label class="text-xs text-slate-500 mb-1 block">Parámetro forma (α)</label><input type="number" id="inputGammaInvAlpha" step="0.1" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
-                                <div><label class="text-xs text-slate-500 mb-1 block">Valor crítico (x)</label><input type="number" id="inputGammaInvX" step="0.001" class="p-2 sm:p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none"></div>
+                        <div class="calc-card flex flex-col h-full">
+                            <span class="calc-card-label">Inversa: hallar p (α, x crítico)</span>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div><span class="field-label">Parámetro forma (α)</span><input type="number" id="inputGammaInvAlpha" step="0.1" class="input-min"></div>
+                                <div><span class="field-label">Valor crítico (x)</span><input type="number" id="inputGammaInvX" step="0.001" class="input-min"></div>
                             </div>
-                            <button id="btnInvInterpGamma" class="bg-teal-600 text-white px-4 py-2 md:px-5 md:py-2 text-[13px] sm:text-sm font-medium rounded-xl hover:bg-teal-700 shadow-sm transition-colors w-full mt-auto">Interpolar p</button>
-                            <div id="resInvInterpGamma" class="mt-4 text-center font-bold text-xl text-teal-700 dark:text-teal-400">--</div>
-                            <div id="breakdownInvInterpGamma" class="mt-2 text-xs bg-slate-50 dark:bg-[#1f2937] p-3 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto text-slate-600 dark:text-slate-400 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
+                            <button id="btnInvInterpGamma" class="btn-calc btn-calc-outline w-full mt-auto">Interpolar p</button>
+                            <div id="resInvInterpGamma" class="mt-3 text-center font-semibold text-base calc-result-value justify-center">--</div>
+                            <div id="breakdownInvInterpGamma" class="mt-2 text-xs bg-slate-50 dark:bg-[#0f172a] p-2.5 rounded border border-slate-100 dark:border-slate-800 overflow-x-auto text-slate-500 text-center whitespace-normal break-words sm:break-normal">Esperando...</div>
                         </div>
                     </div>
                 </div>
 
                 
                 <!-- Gamma Function -->
-                <div class="bg-white dark:bg-[#111827] rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center gap-4 w-full">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 text-center">Calculadora Función Gamma Γ(s)</label>
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
-                        <input type="number" id="inputGammaFunc" step="0.01" placeholder="Ej: 3.5" class="p-2 sm:p-2.5 text-sm border border-slate-300 rounded-lg w-full max-w-[12rem] dark:bg-[#1f2937] dark:border-slate-600 dark:text-white outline-none text-center">
-                        <button id="btnGammaFunc" class="bg-violet-600 text-white px-4 py-2 sm:py-2.5 text-sm font-medium rounded-lg hover:bg-violet-700 shadow-sm transition-colors w-full max-w-[12rem] sm:w-auto">Calcular Γ</button>
+                <div class="gamma-section w-full">
+                    <span class="calc-card-label text-center">Función Gamma Γ(s)</span>
+                    <div class="flex gap-2 w-full max-w-md items-end">
+                        <div class="flex-grow"><span class="field-label">Expresión (número o con variable s)</span><input type="text" id="inputGammaFunc" placeholder="Ej: 5, s+1, s+2, s/2" class="input-min text-center"></div>
+                        <button id="btnGammaFunc" class="btn-calc btn-calc-dark whitespace-nowrap">Calcular Γ</button>
                     </div>
-                    <div id="resGammaFunc" class="text-center font-bold text-lg text-violet-700 dark:text-violet-400 mt-2 min-h-[2rem] w-full flex items-center justify-center">--</div>
+                    <div id="resGammaFunc" class="text-center font-semibold text-base calc-result-value justify-center min-h-[1.5rem] w-full">--</div>
                 </div>
 
             </div>

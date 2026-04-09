@@ -90,6 +90,7 @@ function fmtP(x: number): string {
 
 type KatexApi = {
     render: (tex: string, el: HTMLElement, opts: { displayMode?: boolean; throwOnError?: boolean }) => void;
+    renderToString?: (tex: string, opts?: { displayMode?: boolean; throwOnError?: boolean }) => string;
 };
 
 function getKatex(): KatexApi | undefined {
@@ -1049,9 +1050,9 @@ function setupEvents(): void {
     document.getElementById('btnInterpChi')?.addEventListener('click', interpolateChi);
     document.getElementById('btnInterpF')?.addEventListener('click', interpolateF);
     document.getElementById('btnInterpGamma')?.addEventListener('click', interpolateGamma);
-    document.getElementById('btnGammaT')?.addEventListener('click', () => calcGammaUI('inputGammaT', 'resGammaT'));
-    document.getElementById('btnGammaChi')?.addEventListener('click', () => calcGammaUI('inputGammaChi', 'resGammaChi'));
-    document.getElementById('btnGammaFunc')?.addEventListener('click', () => calcGammaUI('inputGammaFunc', 'resGammaFunc'));
+    document.getElementById('btnGammaChi')?.addEventListener('click', () => calcGammaSmart('inputGammaChi', 'resGammaChi'));
+    document.getElementById('btnGammaChi2')?.addEventListener('click', () => calcGammaSmart('inputGammaChi2', 'resGammaChi2'));
+    document.getElementById('btnGammaFunc')?.addEventListener('click', () => calcGammaSmart('inputGammaFunc', 'resGammaFunc'));
     
     document.getElementById('btnOpenProps')?.addEventListener('click', openPropsDrawer);
     document.getElementById('btnCloseProps')?.addEventListener('click', closePropsDrawer);
@@ -1064,10 +1065,10 @@ function setupEvents(): void {
     const setDarkModeState = (isDark: boolean) => {
         if (isDark) {
             htmlElem.classList.add('dark');
-            darkText.textContent = 'Modo Claro';
+            darkText.textContent = 'Claro';
         } else {
             htmlElem.classList.remove('dark');
-            darkText.textContent = 'Modo Oscuro';
+            darkText.textContent = 'Oscuro';
         }
     };
 
@@ -1286,6 +1287,112 @@ function lanczosGamma(z: number): number {
     return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
 }
 
+/**
+ * Smart Gamma Calculator
+ * - If input is a pure number (e.g. "5", "3.5", "0.5") → compute Γ(n) numerically
+ * - If input contains 's' (e.g. "s+1", "s+2", "s/2") → expand symbolically using Γ(s+n) recursion
+ */
+function calcGammaSmart(inputId: string, resId: string): void {
+    const raw = (document.getElementById(inputId) as HTMLInputElement).value.trim();
+    const resEl = document.getElementById(resId)!;
+
+    if (!raw) { resEl.textContent = 'Ingresa una expresión'; return; }
+
+    // Check if it contains variable 's'
+    const hasS = /s/i.test(raw);
+
+    if (!hasS) {
+        // Pure numeric — compute Gamma directly
+        const num = parseFloat(raw);
+        if (isNaN(num)) { resEl.textContent = 'Expresión no válida'; return; }
+        if (num <= 0 && Number.isInteger(num)) { resEl.textContent = 'Γ no definida para enteros ≤ 0'; return; }
+
+        const result = lanczosGamma(num);
+        if (Number.isInteger(num) && num > 0) {
+            let factorial = 1; for (let i = 2; i < num; i++) factorial *= i;
+            renderKaTeXInto(resEl, `\\Gamma(${num}) = ${Math.round(num) - 1}! = ${factorial}`, false);
+        } else if (Math.abs(num - 0.5) < 1e-10) {
+            renderKaTeXInto(resEl, `\\Gamma(0.5) = \\sqrt{\\pi} \\approx ${Math.sqrt(Math.PI).toPrecision(10)}`, false);
+        } else {
+            renderKaTeXInto(resEl, `\\Gamma(${num}) \\approx ${result.toPrecision(10)}`, false);
+        }
+        return;
+    }
+
+    // Contains 's' — symbolic expansion
+    // Detect pattern: s, s+n, s-n, s*n, s/n, (s+n)/m, etc.
+    // For s+n (integer n >= 1): Γ(s+n) = (s+n-1)(s+n-2)...(s)Γ(s)
+    // For s+n (fractional): show as Γ(expr) in terms of s
+    const normalized = raw.replace(/\s+/g, '').toLowerCase();
+
+    // Match s+integer pattern
+    const matchPlus = normalized.match(/^s\+([0-9]+)$/);
+    const matchMinus = normalized.match(/^s-([0-9]+)$/);
+
+    if (normalized === 's') {
+        renderKaTeXInto(resEl, `\\Gamma(s) = \\Gamma(s)`, false);
+        return;
+    }
+
+    if (matchPlus) {
+        const n = parseInt(matchPlus[1]);
+        if (n === 0) {
+            renderKaTeXInto(resEl, `\\Gamma(s) = \\Gamma(s)`, false);
+            return;
+        }
+        // Γ(s+n) = (s+n-1)(s+n-2)...(s) · Γ(s)
+        const factors: string[] = [];
+        for (let i = n - 1; i >= 0; i--) {
+            if (i === 0) factors.push('s');
+            else if (i === 1) factors.push('(s+1)');
+            else factors.push(`(s+${i})`);
+        }
+        const expansion = factors.join(' \\cdot ');
+        if (n === 1) {
+            renderKaTeXInto(resEl, `\\Gamma(s+1) = s \\cdot \\Gamma(s)`, false);
+        } else {
+            renderKaTeXInto(resEl, `\\Gamma(s+${n}) = ${expansion} \\cdot \\Gamma(s)`, false);
+        }
+        return;
+    }
+
+    if (matchMinus) {
+        const n = parseInt(matchMinus[1]);
+        if (n === 0) {
+            renderKaTeXInto(resEl, `\\Gamma(s) = \\Gamma(s)`, false);
+            return;
+        }
+        // Γ(s-n) = Γ(s) / [(s-1)(s-2)...(s-n)]
+        const factors: string[] = [];
+        for (let i = 1; i <= n; i++) {
+            if (i === 1) factors.push('(s-1)');
+            else factors.push(`(s-${i})`);
+        }
+        const denom = factors.join(' \\cdot ');
+        renderKaTeXInto(resEl, `\\Gamma(s-${n}) = \\frac{\\Gamma(s)}{${denom}}`, false);
+        return;
+    }
+
+    // Match s/2 pattern
+    if (normalized === 's/2') {
+        renderKaTeXInto(resEl, `\\Gamma\\!\\left(\\frac{s}{2}\\right)`, false);
+        return;
+    }
+
+    // Match (s+n)/2 or s/2+n patterns
+    const matchHalf = normalized.match(/^\(s\+([0-9]+)\)\/2$/);
+    if (matchHalf) {
+        const n = matchHalf[1];
+        renderKaTeXInto(resEl, `\\Gamma\\!\\left(\\frac{s+${n}}{2}\\right)`, false);
+        return;
+    }
+
+    // Generic expression with s — just show Γ(expr)
+    const displayExpr = raw.replace(/\*/g, '\\cdot ');
+    renderKaTeXInto(resEl, `\\Gamma(${displayExpr})`, false);
+}
+
+// Keep legacy function for backward compatibility
 function calcGammaUI(inputId: string, resId: string): void {
     const raw = parseFloat((document.getElementById(inputId) as HTMLInputElement).value);
     const resEl = document.getElementById(resId)!;
