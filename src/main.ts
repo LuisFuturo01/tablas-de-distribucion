@@ -479,7 +479,6 @@ function renderSubstitutedZTailUpper(targetP: number, high: { z: number; p: numb
     const tex = `P = ${fmtP(targetP)} > ${fmtP(high.p)} = P(Z \\le ${fmtZ(high.z)}) \\qquad \\Rightarrow \\quad z > ${Z_TAB} \\quad \\text{(cola derecha)}`;
     renderKaTeXInto(document.getElementById('zBreakdownSymbolic')!, tex, true);
 }
-
 function renderSubstitutedZTailLower(targetP: number, low: { z: number; p: number }): void {
     const isZero = Math.abs(targetP) < 1e-10;
     if (isZero) {
@@ -541,6 +540,94 @@ function showTailBreakdownPLower(z: number): void {
     renderSubstitutedPTailLower(z);
 }
 
+/** Build a mini-lupa for the normal Z-table.
+ *  The Z-table uses rows like "-3.4", "0.0", "1.2" and columns 0-9 for hundredths. */
+function buildMiniLupaNormal(z0: number, z1: number, z: number): string {
+    // Determine row keys and column indices for z0 and z1
+    const getRowAndCol = (zVal: number) => {
+        const zRound = Math.round(zVal * 100) / 100;
+        const isNeg = zRound < 0 || Object.is(zRound, -0);
+        const absZ = Math.abs(zRound);
+        const rowBase = Math.floor(absZ * 10) / 10;
+        const col = Math.round((absZ - rowBase) * 100);
+        let rowKey = isNeg && rowBase === 0 ? '-0.0' : isNeg ? '-' + rowBase.toFixed(1) : rowBase.toFixed(1);
+        if (!rowKey.includes('.')) rowKey += '.0';
+        return { rowKey, col };
+    };
+
+    const pt0 = getRowAndCol(z0);
+    const pt1 = getRowAndCol(z1);
+
+    // Determine rows to show
+    const allRows = Object.keys(currentTable.rowData).sort((a, b) => parseFloat(a) - parseFloat(b));
+    const idx0 = allRows.indexOf(pt0.rowKey);
+    const idx1 = allRows.indexOf(pt1.rowKey);
+    if (idx0 === -1 || idx1 === -1) return '';
+
+    const rowStart = Math.max(0, Math.min(idx0, idx1) - 1);
+    const rowEnd = Math.min(allRows.length - 1, Math.max(idx0, idx1) + 1);
+
+    // Determine columns to show (only the relevant hundredths)
+    const colSet = new Set<number>();
+    colSet.add(pt0.col);
+    colSet.add(pt1.col);
+    // Add 1 neighbor on each side
+    const minCol = Math.max(0, Math.min(pt0.col, pt1.col) - 1);
+    const maxCol = Math.min(9, Math.max(pt0.col, pt1.col) + 1);
+    for (let c = minCol; c <= maxCol; c++) colSet.add(c);
+    const visibleCols = Array.from(colSet).sort((a, b) => a - b);
+
+    // Build header
+    let headerCells = `<th>Z</th>`;
+    visibleCols.forEach(c => {
+        const isHl = c === pt0.col || c === pt1.col;
+        headerCells += `<th class="${isHl ? 'lupa-col-hl' : ''}">.0${c}</th>`;
+    });
+
+    // Build body rows
+    let bodyRows = '';
+    for (let ri = rowStart; ri <= rowEnd; ri++) {
+        const rk = allRows[ri];
+        const isLo = rk === pt0.rowKey;
+        const isHi = rk === pt1.rowKey;
+        const isEdge = isLo || isHi;
+
+        let cells = `<th class="${isEdge ? 'lupa-row-hl' : ''}">${rk}</th>`;
+        const rowData = currentTable.rowData[rk];
+        visibleCols.forEach(c => {
+            const val = rowData[c] || '—';
+            let cls = '';
+            if (isLo && c === pt0.col) cls = 'lupa-cell-found';
+            else if (isHi && c === pt1.col) cls = 'lupa-cell-found';
+            else if (!isEdge) cls = 'lupa-dim';
+            cells += `<td class="${cls}">${val}</td>`;
+        });
+        bodyRows += `<tr>${cells}</tr>`;
+
+        // Insert searched ghost row if lo and hi are adjacent and different
+        if (isLo && pt0.rowKey !== pt1.rowKey && ri + 1 <= rowEnd && allRows[ri + 1] === pt1.rowKey) {
+            let searchedCells = `<th>→ ${fmtZ(z)}</th>`;
+            visibleCols.forEach(() => {
+                searchedCells += `<td>?</td>`;
+            });
+            bodyRows += `<tr class="lupa-row-searched">${searchedCells}</tr>`;
+        }
+    }
+
+    return `
+        <div class="mini-lupa-wrapper" style="margin-top:0.5rem;margin-bottom:0.5rem;">
+            <div class="mini-lupa-header">
+                <span class="mini-lupa-icon">🔍</span>
+                <span>Ubicación en tabla Z</span>
+            </div>
+            <table class="mini-lupa-table">
+                <thead><tr>${headerCells}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
 function showBreakdownP(z0: number, p0: number, z: number, p: number, z1: number, p1: number, exact: boolean): void {
     openPanelP();
     const body = document.getElementById('pBreakdownBody')!;
@@ -548,7 +635,12 @@ function showBreakdownP(z0: number, p0: number, z: number, p: number, z1: number
     const midPNote = exact
         ? '<span class="text-[11px] font-normal opacity-90">(exacto en tabla)</span>'
         : '<span class="text-[11px] font-normal opacity-90">(interpolado)</span>';
+
+    // Build mini-lupa for normal distribution
+    const lupaHtml = buildMiniLupaNormal(z0, z1, z);
+
     body.innerHTML = `
+        <tr><td colspan="3" style="padding:0;border:none;">${lupaHtml}</td></tr>
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 transition">
             <td class="text-left font-medium">Anterior (tabla)</td>
             <td class="font-mono tab-num">${fmtZ(z0)}</td>
@@ -687,7 +779,12 @@ function showBreakdownZ(
     const midZNote = exact
         ? '<span class="text-[11px] font-normal opacity-90">(exacto en tabla)</span>'
         : '<span class="text-[11px] font-normal opacity-90">(interpolado)</span>';
+
+    // Build mini-lupa for normal distribution
+    const lupaHtml = buildMiniLupaNormal(z0, z1, zResult);
+
     body.innerHTML = `
+        <tr><td colspan="3" style="padding:0;border:none;">${lupaHtml}</td></tr>
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 transition">
             <td class="text-left font-medium">Anterior (tabla)</td>
             <td class="font-mono tab-num">${fmtP(p0)}</td>
@@ -1057,6 +1154,8 @@ function setupEvents(): void {
     document.getElementById('btnOpenProps')?.addEventListener('click', openPropsDrawer);
     document.getElementById('btnCloseProps')?.addEventListener('click', closePropsDrawer);
     document.getElementById('propsOverlay')?.addEventListener('click', closePropsDrawer);
+    
+    setupLiveHints();
 
     const darkBtn = document.getElementById('toggleDarkMode')!;
     const htmlElem = document.documentElement;
@@ -1302,8 +1401,19 @@ function calcGammaSmart(inputId: string, resId: string): void {
     const hasS = /s/i.test(raw);
 
     if (!hasS) {
-        // Pure numeric — compute Gamma directly
-        const num = parseFloat(raw);
+        // Try parsing as fraction first (e.g. "1/2", "3/2", "7/2")
+        let num: number;
+        let displayStr = raw;
+        const fracMatch = raw.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+        if (fracMatch) {
+            const numer = parseFloat(fracMatch[1]);
+            const denom = parseFloat(fracMatch[2]);
+            if (denom === 0) { resEl.textContent = 'División por cero'; return; }
+            num = numer / denom;
+            displayStr = `\\frac{${fracMatch[1]}}{${fracMatch[2]}}`;
+        } else {
+            num = parseFloat(raw);
+        }
         if (isNaN(num)) { resEl.textContent = 'Expresión no válida'; return; }
         if (num <= 0 && Number.isInteger(num)) { resEl.textContent = 'Γ no definida para enteros ≤ 0'; return; }
 
@@ -1312,9 +1422,9 @@ function calcGammaSmart(inputId: string, resId: string): void {
             let factorial = 1; for (let i = 2; i < num; i++) factorial *= i;
             renderKaTeXInto(resEl, `\\Gamma(${num}) = ${Math.round(num) - 1}! = ${factorial}`, false);
         } else if (Math.abs(num - 0.5) < 1e-10) {
-            renderKaTeXInto(resEl, `\\Gamma(0.5) = \\sqrt{\\pi} \\approx ${Math.sqrt(Math.PI).toPrecision(10)}`, false);
+            renderKaTeXInto(resEl, `\\Gamma\\!\\left(${displayStr}\\right) = \\sqrt{\\pi} \\approx ${Math.sqrt(Math.PI).toPrecision(10)}`, false);
         } else {
-            renderKaTeXInto(resEl, `\\Gamma(${num}) \\approx ${result.toPrecision(10)}`, false);
+            renderKaTeXInto(resEl, `\\Gamma\\!\\left(${displayStr}\\right) \\approx ${result.toPrecision(10)}`, false);
         }
         return;
     }
@@ -1425,6 +1535,39 @@ function findColIdx(table: DistTable, targetAlpha: number): number {
     return best;
 }
 
+function findCols(table: DistTable, targetAlpha: number): { exact: boolean; exactIdx: number; loIdx: number; hiIdx: number; aLo: number; aHi: number } {
+    const cols = (table.meta?.columns || []).map(Number);
+    for (let i = 0; i < cols.length; i++) {
+        if (Math.abs(cols[i] - targetAlpha) < 1e-9) return { exact: true, exactIdx: i, loIdx: i, hiIdx: i, aLo: cols[i], aHi: cols[i] };
+    }
+    const pairs = cols.map((v, i) => ({ v, i })).sort((a, b) => a.v - b.v);
+    if (targetAlpha <= pairs[0].v) return { exact: false, exactIdx: pairs[0].i, loIdx: pairs[0].i, hiIdx: pairs[0].i, aLo: pairs[0].v, aHi: pairs[0].v };
+    if (targetAlpha >= pairs[pairs.length - 1].v) return { exact: false, exactIdx: pairs[pairs.length - 1].i, loIdx: pairs[pairs.length - 1].i, hiIdx: pairs[pairs.length - 1].i, aLo: pairs[pairs.length - 1].v, aHi: pairs[pairs.length - 1].v };
+    
+    let lo = pairs[0], hi = pairs[pairs.length - 1];
+    for (let i = 0; i < pairs.length - 1; i++) {
+        if (targetAlpha >= pairs[i].v && targetAlpha <= pairs[i+1].v) {
+            lo = pairs[i]; hi = pairs[i+1]; break;
+        }
+    }
+    return { exact: false, exactIdx: -1, loIdx: lo.i, hiIdx: hi.i, aLo: lo.v, aHi: hi.v };
+}
+
+function interpolateBilinear(table: DistTable, targetRow: number, targetAlpha: number, colsInfo: ReturnType<typeof findCols>) {
+    const resLo = interpolateBetweenRows(table, targetRow, colsInfo.loIdx);
+    const resHi = interpolateBetweenRows(table, targetRow, colsInfo.hiIdx);
+    if (!resLo || !resHi) return null;
+    if (colsInfo.loIdx === colsInfo.hiIdx) return resLo;
+    
+    const vLo = resLo.val;
+    const vHi = resHi.val;
+    const aLo = colsInfo.aLo;
+    const aHi = colsInfo.aHi;
+    
+    const val = vLo + ((targetAlpha - aLo) / (aHi - aLo)) * (vHi - vLo);
+    return { val, resLo, resHi, aLo, aHi, vLo, vHi };
+}
+
 function interpolateBetweenRows(table: DistTable, targetRow: number, colIdx: number): { val: number; lo: { key: string; num: number; v: number }; hi: { key: string; num: number; v: number }; exact: boolean } | null {
     const rows = getSortedRowKeys(table);
     if (rows.length === 0) return null;
@@ -1446,8 +1589,160 @@ function interpolateBetweenRows(table: DistTable, targetRow: number, colIdx: num
 }
 
 
+/** Build a mini "magnifying glass" table showing a cropped view of the real distribution table
+ *  around the interpolation rows, highlighting the target column and the rows used. */
+function buildMiniLupaTable(table: DistTable, loKey: string, hiKey: string, targetRow: number, colIdx: number): string {
+    const columns = table.meta?.columns || [];
+    const rows = getSortedRowKeys(table);
+    if (rows.length === 0 || columns.length === 0) return '';
 
-function showInterpResult(resId: string, bdId: string, label: string, targetRow: number, rowLabel: string, result: ReturnType<typeof interpolateBetweenRows>): void {
+    // Determine which columns to show: 1 before, target column, 1 after
+    const colStart = Math.max(0, colIdx - 1);
+    const colEnd = Math.min(columns.length - 1, colIdx + 1);
+    const visibleColIds: number[] = [];
+    for (let c = colStart; c <= colEnd; c++) visibleColIds.push(c);
+
+    // Determine which rows to show: 1 before lo, lo, (searched), hi, 1 after hi
+    const loIdx = rows.findIndex(r => r.key === loKey);
+    const hiIdx = rows.findIndex(r => r.key === hiKey);
+    const rowStart = Math.max(0, loIdx - 1);
+    const rowEnd = Math.min(rows.length - 1, hiIdx + 1);
+
+    // Build first column header label
+    const type = table.meta?.type || 'normal';
+    let firstColLabel = 'gl';
+    if (type === 'f') firstColLabel = 'ν₂\\ν₁';
+    else if (type === 'gamma') firstColLabel = 'α';
+
+    // Build column header TH cells
+    let headerCells = `<th>${firstColLabel}</th>`;
+    visibleColIds.forEach(ci => {
+        const cls = ci === colIdx ? 'lupa-col-hl' : '';
+        headerCells += `<th class="${cls}">${columns[ci]}</th>`;
+    });
+
+    // Build body rows
+    let bodyRows = '';
+    for (let ri = rowStart; ri <= rowEnd; ri++) {
+        const r = rows[ri];
+        const isLo = r.key === loKey;
+        const isHi = r.key === hiKey;
+        const isEdge = isLo || isHi;
+
+        let cells = `<th class="${isEdge ? 'lupa-row-hl' : ''}">${r.key}</th>`;
+        const rowData = table.rowData[r.key];
+        visibleColIds.forEach(ci => {
+            const val = rowData[ci] || '—';
+            let cls = '';
+            if (isEdge && ci === colIdx) cls = 'lupa-cell-found';
+            else if (ci === colIdx) cls = '';
+            else if (!isEdge) cls = 'lupa-dim';
+            cells += `<td class="${cls}">${val}</td>`;
+        });
+        bodyRows += `<tr>${cells}</tr>`;
+
+        // If this is lo row and the next is hi (no gap), insert the "searched" ghost row
+        if (isLo && ri + 1 <= rowEnd && rows[ri + 1].key === hiKey) {
+            let searchedCells = `<th>→ ${targetRow}</th>`;
+            visibleColIds.forEach(ci => {
+                searchedCells += `<td>${ci === colIdx ? '?' : ''}</td>`;
+            });
+            bodyRows += `<tr class="lupa-row-searched">${searchedCells}</tr>`;
+        }
+    }
+
+    return `
+        <div class="mini-lupa-wrapper">
+            <div class="mini-lupa-header">
+                <span class="mini-lupa-icon">🔍</span>
+                <span>Ubicación en tabla</span>
+            </div>
+            <table class="mini-lupa-table">
+                <thead><tr>${headerCells}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+/** Build a mini "magnifying glass" for inverse interpolation (across columns).
+ *  Shows the row being used and the column neighborhood around the searched value. */
+function buildMiniLupaTableInverse(table: DistTable, rowKey: string, loColVal: number, hiColVal: number, targetVal: number): string {
+    const columns = table.meta?.columns || [];
+    const rowData = table.rowData[rowKey];
+    if (!rowData || columns.length === 0) return '';
+
+    // Find the column indices for lo and hi values
+    const parsedVals = rowData.map(Number);
+    let loColIdx = -1, hiColIdx = -1;
+    const colAlphas = columns.map(Number);
+
+    // Match by alpha value
+    for (let i = 0; i < colAlphas.length; i++) {
+        if (Math.abs(colAlphas[i] - loColVal) < 1e-9) loColIdx = i;
+        if (Math.abs(colAlphas[i] - hiColVal) < 1e-9) hiColIdx = i;
+    }
+    if (loColIdx === -1 || hiColIdx === -1) {
+        // Fallback: find by parsed value
+        for (let i = 0; i < parsedVals.length; i++) {
+            if (loColIdx === -1 && Math.abs(parsedVals[i] - targetVal) < Math.abs(parsedVals[loColIdx === -1 ? 0 : loColIdx] - targetVal)) loColIdx = i;
+        }
+        return '';
+    }
+
+    const colStart = Math.max(0, Math.min(loColIdx, hiColIdx) - 1);
+    const colEnd = Math.min(columns.length - 1, Math.max(loColIdx, hiColIdx) + 1);
+    const visibleColIds: number[] = [];
+    for (let c = colStart; c <= colEnd; c++) visibleColIds.push(c);
+
+    // Determine surrounding rows
+    const rows = getSortedRowKeys(table);
+    const rowIdx = rows.findIndex(r => r.key === rowKey);
+    const rowStart = Math.max(0, rowIdx - 1);
+    const rowEnd = Math.min(rows.length - 1, rowIdx + 1);
+
+    const type = table.meta?.type || 'normal';
+    let firstColLabel = 'gl';
+    if (type === 'f') firstColLabel = 'ν₂\\ν₁';
+    else if (type === 'gamma') firstColLabel = 'α';
+
+    let headerCells = `<th>${firstColLabel}</th>`;
+    visibleColIds.forEach(ci => {
+        const isHl = ci === loColIdx || ci === hiColIdx;
+        headerCells += `<th class="${isHl ? 'lupa-col-hl' : ''}">${columns[ci]}</th>`;
+    });
+
+    let bodyRows = '';
+    for (let ri = rowStart; ri <= rowEnd; ri++) {
+        const r = rows[ri];
+        const isTarget = r.key === rowKey;
+        const rd = table.rowData[r.key];
+        let cells = `<th class="${isTarget ? 'lupa-row-hl' : ''}">${r.key}</th>`;
+        visibleColIds.forEach(ci => {
+            const v = rd[ci] || '—';
+            let cls = '';
+            if (isTarget && (ci === loColIdx || ci === hiColIdx)) cls = 'lupa-cell-found';
+            else if (!isTarget) cls = 'lupa-dim';
+            cells += `<td class="${cls}">${v}</td>`;
+        });
+        bodyRows += `<tr>${cells}</tr>`;
+    }
+
+    return `
+        <div class="mini-lupa-wrapper">
+            <div class="mini-lupa-header">
+                <span class="mini-lupa-icon">🔍</span>
+                <span>Ubicación en tabla</span>
+            </div>
+            <table class="mini-lupa-table">
+                <thead><tr>${headerCells}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function showInterpResult(resId: string, bdId: string, label: string, targetRow: number, rowLabel: string, result: ReturnType<typeof interpolateBetweenRows>, colIdx?: number): void {
     const resEl = document.getElementById(resId)!;
     const bdEl = document.getElementById(bdId)!;
     if (!result) { resEl.textContent = 'No encontrado'; bdEl.textContent = ''; return; }
@@ -1455,83 +1750,338 @@ function showInterpResult(resId: string, bdId: string, label: string, targetRow:
     const { val, lo, hi, exact } = result;
     renderKaTeXInto(resEl, `${label} \\approx ${val.toFixed(4)}`, false);
     
+    let breakdownBody = '';
+    let calcFormula = '';
     if (exact) {
-        renderKaTeXInto(bdEl, `\\text{Valor exacto en tabla}`, true);
-    } else {
-        let rawLabel = rowLabel;
-        if(rawLabel === '\\nu_2') rawLabel = 'ν₂';
-        if(rawLabel === '\\nu_1') rawLabel = 'ν₁';
-        if(rawLabel === '\\alpha') rawLabel = 'α';
-
-        const tableHtml = `
-            <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Desglose Regla de Tres Proporcional</p>
-                <div class="overflow-x-auto w-full mb-4">
-                    <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
-                        <thead class="bg-slate-100 dark:bg-slate-700">
-                            <tr><th>Punto</th><th class="whitespace-nowrap">${rawLabel}</th><th class="whitespace-nowrap">Resolución</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-b border-slate-100 dark:border-slate-700">
-                                <td class="font-semibold text-slate-500">Ant.</td>
-                                <td>${lo.num}</td><td>${lo.v.toFixed(4)}</td>
-                            </tr>
-                            <tr class="bg-indigo-50/50 dark:bg-indigo-900/20 font-semibold text-indigo-700 dark:text-indigo-400">
-                                <td>Buscado</td>
-                                <td>${targetRow}</td><td>${val.toFixed(4)}</td>
-                            </tr>
-                            <tr>
-                                <td class="font-semibold text-slate-500">Sig.</td>
-                                <td>${hi.num}</td><td>${hi.v.toFixed(4)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
-                <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
-            </div>
+        breakdownBody = `
+            <tr class="bg-emerald-50/50 dark:bg-emerald-900/20 font-semibold text-emerald-700 dark:text-emerald-400">
+                <td colspan="2">Punto Exacto (Sin Regla de 3)</td>
+                <td>${val.toFixed(4)}</td>
+            </tr>
         `;
-        bdEl.innerHTML = tableHtml;
-        const formulaEl = document.getElementById(bdId + '_formula')!;
-        renderKaTeXInto(formulaEl, `\\begin{aligned} ${label} &= ${lo.v.toFixed(4)} + \\dfrac{${targetRow} - ${lo.num}}{${hi.num} - ${lo.num}} \\cdot (${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}) \\\\ &\\approx ${val.toFixed(4)} \\end{aligned}`, true);
+        calcFormula = `\\begin{aligned} ${label} &= \\text{Valor extraído directamente de la tabla} \\\\ &\\approx ${val.toFixed(4)} \\end{aligned}`;
+    } else {
+        breakdownBody = `
+            <tr class="border-b border-slate-100 dark:border-slate-700">
+                <td class="font-semibold text-slate-500">Ant.</td>
+                <td>${lo.num}</td><td>${lo.v.toFixed(4)}</td>
+            </tr>
+            <tr class="bg-indigo-50/50 dark:bg-indigo-900/20 font-semibold text-indigo-700 dark:text-indigo-400">
+                <td>Buscado</td>
+                <td>${targetRow}</td><td>${val.toFixed(4)}</td>
+            </tr>
+            <tr>
+                <td class="font-semibold text-slate-500">Sig.</td>
+                <td>${hi.num}</td><td>${hi.v.toFixed(4)}</td>
+            </tr>
+        `;
+        calcFormula = `\\begin{aligned} ${label} &= ${lo.v.toFixed(4)} + \\dfrac{${targetRow} - ${lo.num}}{${hi.num} - ${lo.num}} \\cdot (${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}) \\\\ &\\approx ${val.toFixed(4)} \\end{aligned}`;
+    }
+
+    let rawLabel = rowLabel;
+    if(rawLabel === '\\nu_2') rawLabel = 'ν₂';
+    if(rawLabel === '\\nu_1') rawLabel = 'ν₁';
+    if(rawLabel === '\\alpha') rawLabel = 'α';
+
+    // Build mini-lupa table
+    let lupaHtml = '';
+    if (colIdx !== undefined && currentTable.meta?.columns) {
+        lupaHtml = buildMiniLupaTable(currentTable, lo.key, exact ? lo.key : hi.key, targetRow, colIdx);
+    }
+
+    const tableHtml = `
+        <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
+            ${lupaHtml}
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Desglose Regla de Tres Proporcional ${exact ? '(Punto Exacto)' : ''}</p>
+            <div class="overflow-x-auto w-full mb-4">
+                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
+                    <thead class="${exact ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-slate-100 dark:bg-slate-700'}">
+                        <tr><th>Punto</th><th class="whitespace-nowrap">${rawLabel}</th><th class="whitespace-nowrap">Resolución</th></tr>
+                    </thead>
+                    <tbody>
+                        ${breakdownBody}
+                    </tbody>
+                </table>
+            </div>
+            ${exact ? `
+            <div class="text-sm text-center mb-4 bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 text-slate-500 italic">
+                El valor coincide con un punto exacto en la tabla, por lo que no requiere Regla de Tres.
+            </div>` : ''}
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
+            <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
+        </div>
+    `;
+    bdEl.innerHTML = tableHtml;
+    const formulaEl = document.getElementById(bdId + '_formula')!;
+    renderKaTeXInto(formulaEl, calcFormula, true);
+}
+/** Render a probability formula hint above the result, highlighting the unknown in red */
+function showFormulaHint(resId: string, tex: string, isError: boolean = false): void {
+    const resEl = document.getElementById(resId)!;
+    let hintEl = resEl.previousElementSibling as HTMLElement | null;
+    if (!hintEl || !hintEl.classList.contains('formula-hint')) {
+        hintEl = document.createElement('div');
+        hintEl.className = 'formula-hint';
+        resEl.parentNode!.insertBefore(hintEl, resEl);
+    }
+    if (isError) {
+        hintEl.style.color = '#ef4444';
+        hintEl.style.borderColor = '#fca5a5';
+        hintEl.style.background = 'rgba(254, 226, 226, 0.4)';
+    } else {
+        hintEl.style.color = '';
+        hintEl.style.borderColor = '';
+        hintEl.style.background = '';
+    }
+    renderKaTeXInto(hintEl, tex, false);
+}
+
+function updateLiveHints(): void {
+    const type = currentTable?.meta?.type;
+    if (!type) return;
+
+    if (type === 't') {
+        const glStr = (document.getElementById('inputTInterpGl') as HTMLInputElement).value;
+        const alphaStr = (document.getElementById('inputTInterpAlpha') as HTMLInputElement).value;
+        const btn = document.getElementById('btnInterpT') as HTMLButtonElement;
+        const gl = parseFloat(glStr);
+        const alpha = parseFloat(alphaStr);
+        if (glStr && alphaStr && !isNaN(gl) && !isNaN(alpha)) {
+            if (alpha <= 0 || alpha >= 1 || gl <= 0) {
+                showFormulaHint('resInterpT', 'Error: \\alpha \\in (0,1), gl > 0', true);
+                btn.disabled = true;
+            } else {
+                showFormulaHint('resInterpT', `P(T_{${gl}} > {\\color{red}x}) = ${alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+                btn.disabled = false;
+            }
+        }
+        
+        // Inverse
+        const glIStr = (document.getElementById('inputTInvGl') as HTMLInputElement).value;
+        const tStr = (document.getElementById('inputTInvT') as HTMLInputElement).value;
+        const btnI = document.getElementById('btnInvInterpT') as HTMLButtonElement;
+        const glI = parseFloat(glIStr);
+        const t = parseFloat(tStr);
+        if (glIStr && tStr && !isNaN(glI) && !isNaN(t)) {
+            if (glI <= 0) {
+                showFormulaHint('resInvInterpT', 'Error: gl > 0', true);
+                btnI.disabled = true;
+            } else {
+                showFormulaHint('resInvInterpT', `P(T_{${glI}} > ${Math.abs(t)}) = {\\color{red}\\alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+                btnI.disabled = false;
+            }
+        }
+    } else if (type === 'chi') {
+        const glStr = (document.getElementById('inputChiInterpGl') as HTMLInputElement).value;
+        const alphaStr = (document.getElementById('inputChiInterpAlpha') as HTMLInputElement).value;
+        const btn = document.getElementById('btnInterpChi') as HTMLButtonElement;
+        const gl = parseFloat(glStr);
+        const alpha = parseFloat(alphaStr);
+        if (glStr && alphaStr && !isNaN(gl) && !isNaN(alpha)) {
+            if (alpha <= 0 || alpha >= 1 || gl <= 0 || gl > 100) {
+                showFormulaHint('resInterpChi', 'Error: \\alpha \\in (0,1), 0 < gl \\le 100', true);
+                btn.disabled = true;
+            } else {
+                showFormulaHint('resInterpChi', `P(\\chi^2_{${gl}} > {\\color{red}x}) = ${alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+                btn.disabled = false;
+            }
+        }
+        
+        // Inverse
+        const glIStr = (document.getElementById('inputChiInvGl') as HTMLInputElement).value;
+        const chiStr = (document.getElementById('inputChiInvChi') as HTMLInputElement).value;
+        const btnI = document.getElementById('btnInvInterpChi') as HTMLButtonElement;
+        const glI = parseFloat(glIStr);
+        const chi = parseFloat(chiStr);
+        if (glIStr && chiStr && !isNaN(glI) && !isNaN(chi)) {
+            if (glI <= 0 || glI > 100 || chi < 0) {
+                showFormulaHint('resInvInterpChi', 'Error: 0 < gl \\le 100, \\chi^2 > 0', true);
+                btnI.disabled = true;
+            } else {
+                showFormulaHint('resInvInterpChi', `P(\\chi^2_{${glI}} > ${chi}) = {\\color{red}\\alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+                btnI.disabled = false;
+            }
+        }
+    } else if (type === 'f') {
+        const v1Str = (document.getElementById('inputFInterpV1') as HTMLInputElement).value;
+        const v2Str = (document.getElementById('inputFInterpV2') as HTMLInputElement).value;
+        const btn = document.getElementById('btnInterpF') as HTMLButtonElement;
+        const v1 = parseFloat(v1Str);
+        const v2 = parseFloat(v2Str);
+        if (v1Str && v2Str && !isNaN(v1) && !isNaN(v2)) {
+            if (v1 <= 0 || v2 <= 0) {
+                showFormulaHint('resInterpF', 'Error: \\nu_1 > 0, \\nu_2 > 0', true);
+                btn.disabled = true;
+            } else {
+                const alphaF = currentTable?.meta?.extraDims?.alpha || '?';
+                showFormulaHint('resInterpF', `P(F_{${Math.round(v1)},${v2}} > {\\color{red}x}) = ${alphaF} \\quad \\small\\text{— encontrar lo rojo}`);
+                btn.disabled = false;
+            }
+        }
+    } else if (type === 'gamma') {
+        const alphaStr = (document.getElementById('inputGammaInterpAlpha') as HTMLInputElement).value;
+        const pStr = (document.getElementById('inputGammaInterpP') as HTMLInputElement).value;
+        const btn = document.getElementById('btnInterpGamma') as HTMLButtonElement;
+        const alpha = parseFloat(alphaStr);
+        const p = parseFloat(pStr);
+        if (alphaStr && pStr && !isNaN(alpha) && !isNaN(p)) {
+            if (p <= 0 || p >= 1 || alpha <= 0) {
+                showFormulaHint('resInterpGamma', 'Error: p \\in (0,1), \\alpha > 0', true);
+                btn.disabled = true;
+            } else {
+                showFormulaHint('resInterpGamma', `P(X_{\\alpha=${alpha}} \\le {\\color{red}x}) = ${p} \\quad \\small\\text{— encontrar lo rojo}`);
+                btn.disabled = false;
+            }
+        }
+        
+        // Inverse
+        const alphaIStr = (document.getElementById('inputGammaInvAlpha') as HTMLInputElement).value;
+        const xStr = (document.getElementById('inputGammaInvX') as HTMLInputElement).value;
+        const btnI = document.getElementById('btnInvInterpGamma') as HTMLButtonElement;
+        const alphaI = parseFloat(alphaIStr);
+        const x = parseFloat(xStr);
+        if (alphaIStr && xStr && !isNaN(alphaI) && !isNaN(x)) {
+            if (alphaI <= 0 || x < 0) {
+                showFormulaHint('resInvInterpGamma', 'Error: \\alpha > 0, x > 0', true);
+                btnI.disabled = true;
+            } else {
+                showFormulaHint('resInvInterpGamma', `P(X_{\\alpha=${alphaI}} \\le ${x}) = {\\color{red}p} \\quad \\small\\text{— encontrar lo rojo}`);
+                btnI.disabled = false;
+            }
+        }
     }
 }
+
+function setupLiveHints(): void {
+    const ids = [
+        'inputTInterpGl', 'inputTInterpAlpha', 'inputTInvGl', 'inputTInvT',
+        'inputChiInterpGl', 'inputChiInterpAlpha', 'inputChiInvGl', 'inputChiInvChi',
+        'inputFInterpV1', 'inputFInterpV2',
+        'inputGammaInterpAlpha', 'inputGammaInterpP', 'inputGammaInvAlpha', 'inputGammaInvX'
+    ];
+    ids.forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updateLiveHints);
+    });
+}
+
+function showBilinearResult(resId: string, bdId: string, label: string, targetRow: number, targetAlpha: number, result: ReturnType<typeof interpolateBilinear>): void {
+    const resEl = document.getElementById(resId)!;
+    const bdEl = document.getElementById(bdId)!;
+    if (!result) { resEl.textContent = 'Err'; return; }
+    
+    renderKaTeXInto(resEl, `${label} \\approx ${result.val.toFixed(4)}`, false);
+    let lupaHtml = '';
+    if (result.resLo && currentTable.meta?.columns) {
+        const cols = (currentTable.meta.columns || []).map(Number);
+        let loColIdx = -1;
+        let minD = Infinity;
+        // Just pick the closest column to center the lupa on
+        for (let i = 0; i < cols.length; i++) {
+            const d = Math.abs(cols[i] - targetAlpha);
+            if (d < minD) { minD = d; loColIdx = i; }
+        }
+        if (loColIdx !== -1) {
+            lupaHtml = buildMiniLupaTable(currentTable, result.resLo.lo.key, result.resLo.hi.key, targetRow, loColIdx);
+        }
+    }
+
+    const tableHtml = `
+        <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
+            ${lupaHtml}
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Interpolación Doble (Bilineal)</p>
+            <div class="overflow-x-auto w-full mb-4">
+                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
+                    <thead class="bg-indigo-50 dark:bg-indigo-900/30">
+                        <tr><th>Paso</th><th>Punto α</th><th>Valor Interp. en fila</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-slate-100 dark:border-slate-700">
+                            <td class="font-semibold text-slate-500">Col Izq.</td>
+                            <td>${result.aLo}</td><td>${result.vLo.toFixed(4)}</td>
+                        </tr>
+                        <tr class="border-b border-slate-100 dark:border-slate-700">
+                            <td class="font-semibold text-slate-500">Col Der.</td>
+                            <td>${result.aHi}</td><td>${result.vHi.toFixed(4)}</td>
+                        </tr>
+                        <tr class="bg-indigo-50/50 dark:bg-indigo-900/20 font-semibold text-indigo-700 dark:text-indigo-400">
+                            <td>Final</td>
+                            <td>${targetAlpha}</td><td>${result.val.toFixed(4)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo de interpolación entre columnas</p>
+            <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
+        </div>
+    `;
+    bdEl.innerHTML = tableHtml;
+    const formulaEl = document.getElementById(bdId + '_formula')!;
+    renderKaTeXInto(formulaEl, `\\begin{aligned} ${label} &= ${result.vLo.toFixed(4)} + \\dfrac{${targetAlpha} - ${result.aLo}}{${result.aHi} - ${result.aLo}} \\cdot (${result.vHi.toFixed(4)} - ${result.vLo.toFixed(4)}) \\\\ &\\approx ${result.val.toFixed(4)} \\end{aligned}`, true);
+}
+
 function interpolateT(): void {
     const gl = parseFloat((document.getElementById('inputTInterpGl') as HTMLInputElement).value);
     const alpha = parseFloat((document.getElementById('inputTInterpAlpha') as HTMLInputElement).value);
     if (isNaN(gl) || isNaN(alpha)) { document.getElementById('resInterpT')!.textContent = 'Err: completa campos'; return; }
-    const colIdx = findColIdx(currentTable, alpha);
-    const result = interpolateBetweenRows(currentTable, gl, colIdx);
-    showInterpResult('resInterpT', 'breakdownInterpT', 't_{\\alpha,gl}', gl, 'gl', result);
+    // Show formula hint: P(T > x) = α  → find x (in red)
+    showFormulaHint('resInterpT', `P(T_{${gl}} > {\\color{red}x}) = ${alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+    
+    const colsInfo = findCols(currentTable, alpha);
+    if (colsInfo.exact) {
+        const result = interpolateBetweenRows(currentTable, gl, colsInfo.exactIdx);
+        showInterpResult('resInterpT', 'breakdownInterpT', 't_{\\alpha,gl}', gl, 'gl', result, colsInfo.exactIdx);
+    } else {
+        const result = interpolateBilinear(currentTable, gl, alpha, colsInfo);
+        showBilinearResult('resInterpT', 'breakdownInterpT', 't_{\\alpha,gl}', gl, alpha, result);
+    }
 }
 
 function interpolateChi(): void {
     const gl = parseFloat((document.getElementById('inputChiInterpGl') as HTMLInputElement).value);
     const alpha = parseFloat((document.getElementById('inputChiInterpAlpha') as HTMLInputElement).value);
     if (isNaN(gl) || isNaN(alpha)) { document.getElementById('resInterpChi')!.textContent = 'Err: completa campos'; return; }
-    const colIdx = findColIdx(currentTable, alpha);
-    const result = interpolateBetweenRows(currentTable, gl, colIdx);
-    showInterpResult('resInterpChi', 'breakdownInterpChi', '\\chi^2_{\\alpha,gl}', gl, 'gl', result);
+    // Show formula hint: P(χ² > x) = α  → find x (in red)
+    showFormulaHint('resInterpChi', `P(\\chi^2_{${gl}} > {\\color{red}x}) = ${alpha} \\quad \\small\\text{— encontrar lo rojo}`);
+    
+    const colsInfo = findCols(currentTable, alpha);
+    if (colsInfo.exact) {
+        const result = interpolateBetweenRows(currentTable, gl, colsInfo.exactIdx);
+        showInterpResult('resInterpChi', 'breakdownInterpChi', '\\chi^2_{\\alpha,gl}', gl, 'gl', result, colsInfo.exactIdx);
+    } else {
+        const result = interpolateBilinear(currentTable, gl, alpha, colsInfo);
+        showBilinearResult('resInterpChi', 'breakdownInterpChi', '\\chi^2_{\\alpha,gl}', gl, alpha, result);
+    }
 }
 
 function interpolateF(): void {
     const v2 = parseFloat((document.getElementById('inputFInterpV2') as HTMLInputElement).value);
     const v1 = parseFloat((document.getElementById('inputFInterpV1') as HTMLInputElement).value);
     if (isNaN(v2) || isNaN(v1)) { document.getElementById('resInterpF')!.textContent = 'Err: completa campos'; return; }
+    const alphaF = currentTable.meta?.extraDims?.alpha || '?';
+    // Show formula hint: P(F > x) = α  → find x (in red)
+    showFormulaHint('resInterpF', `P(F_{${Math.round(v1)},${v2}} > {\\color{red}x}) = ${alphaF} \\quad \\small\\text{— encontrar lo rojo}`);
     const cols = currentTable.meta?.columns || [];
     let colIdx = 0, minD = Infinity;
     cols.forEach((c, i) => { const d = Math.abs(Number(c) - v1); if (d < minD) { minD = d; colIdx = i; } });
     const result = interpolateBetweenRows(currentTable, v2, colIdx);
-    showInterpResult('resInterpF', 'breakdownInterpF', `F_{\\nu_1=${Math.round(v1)},\\nu_2}`, v2, '\\nu_2', result);
+    showInterpResult('resInterpF', 'breakdownInterpF', `F_{\\nu_1=${Math.round(v1)},\\nu_2}`, v2, '\\nu_2', result, colIdx);
 }
 
 function interpolateGamma(): void {
     const alpha = parseFloat((document.getElementById('inputGammaInterpAlpha') as HTMLInputElement).value);
     const p = parseFloat((document.getElementById('inputGammaInterpP') as HTMLInputElement).value);
     if (isNaN(alpha) || isNaN(p)) { document.getElementById('resInterpGamma')!.textContent = 'Err: completa campos'; return; }
-    const colIdx = findColIdx(currentTable, p);
-    const result = interpolateBetweenRows(currentTable, alpha, colIdx);
-    showInterpResult('resInterpGamma', 'breakdownInterpGamma', 'x_{\\alpha,p}', alpha, '\\alpha', result);
+    // Show formula hint: P(X ≤ x) = p  → find x (in red)
+    showFormulaHint('resInterpGamma', `P(X_{\\alpha=${alpha}} \\le {\\color{red}x}) = ${p} \\quad \\small\\text{— encontrar lo rojo}`);
+    
+    const colsInfo = findCols(currentTable, p);
+    if (colsInfo.exact) {
+        const result = interpolateBetweenRows(currentTable, alpha, colsInfo.exactIdx);
+        showInterpResult('resInterpGamma', 'breakdownInterpGamma', 'x_{\\alpha,p}', alpha, '\\alpha', result, colsInfo.exactIdx);
+    } else {
+        const result = interpolateBilinear(currentTable, alpha, p, colsInfo);
+        showBilinearResult('resInterpGamma', 'breakdownInterpGamma', 'x_{\\alpha,p}', alpha, p, result);
+    }
 }
 
 /* =============================================
@@ -1769,16 +2319,35 @@ function interpolateInverseRow(table: DistTable, targetRow: number, targetVal: n
         }
     }
     
-    let lo = pairs[0], hi = pairs[pairs.length - 1];
+    // Check constraints: DO NOT INTERPOLATE IF OUT OF BOUNDS
+    if (targetVal < pairs[0].v) {
+        const isDesc = pairs[0].a > pairs[pairs.length - 1].a;
+        return { exact: false, outOfBounds: 'below', boundObj: pairs[0], approxGl: rKey, limitApproaches: isDesc ? 1 : 0 } as any;
+    } 
+    if (targetVal > pairs[pairs.length - 1].v) {
+        const isDesc = pairs[0].a > pairs[pairs.length - 1].a;
+        return { exact: false, outOfBounds: 'above', boundObj: pairs[pairs.length - 1], approxGl: rKey, limitApproaches: isDesc ? 0 : 1 } as any;
+    }
+
+    let lo = pairs[0], hi = pairs[1];
     for (let i = 0; i < pairs.length - 1; i++) {
         if (targetVal >= pairs[i].v && targetVal <= pairs[i+1].v) {
             lo = pairs[i]; hi = pairs[i+1]; break;
         }
     }
-    if(hi.v === lo.v) return { val: lo.a, lo, hi, exact: true, approxGl: rKey };
     
-    const val = lo.a + ((targetVal - lo.v) / (hi.v - lo.v)) * (hi.a - lo.a);
-    return { val, lo, hi, exact: false, approxGl: rKey };
+    if(hi.v === lo.v) return { val: lo.a, lo, hi, exact: true, approxGl: rKey, isClamped: false, rawVal: lo.a };
+    
+    // Linearly interpolate inside bounds
+    const rawVal = lo.a + ((targetVal - lo.v) / (hi.v - lo.v)) * (hi.a - lo.a);
+    
+    // Final sanity check for probability domain
+    let finalVal = rawVal;
+    let isClamped = false;
+    if (finalVal < 0) { finalVal = 0; isClamped = true; }
+    if (finalVal > 1) { finalVal = 1; isClamped = true; }
+    
+    return { val: finalVal, lo, hi, exact: false, approxGl: rKey, isClamped, rawVal };
 }
 
 
@@ -1788,49 +2357,127 @@ function showInvInterpResult(resId: string, bdId: string, label: string, targetV
     const bdEl = document.getElementById(bdId)!;
     if (!result) { resEl.textContent = 'No encontrado'; bdEl.textContent = ''; return; }
     
-    const { val, lo, hi, exact, approxGl } = result;
-    renderKaTeXInto(resEl, `${label} \\approx ${val.toPrecision(4)}`, false);
-    
-    if (exact) {
-        renderKaTeXInto(bdEl, `\\text{Exacto en tabla para gl } \\approx ${approxGl}`, true);
-    } else {
+    const res = result as any;
+
+    if (res.outOfBounds) {
+        const signVal = res.limitApproaches === 1 ? '>' : '<';
+        const displayLabel = label.replace(/\\/g, ''); // strip out common latex slashes for html presentation if needed
+        renderKaTeXInto(resEl, `${label} \\approx ${res.limitApproaches}`, false);
+        
         const tableHtml = `
             <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Desglose Regla de Tres</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Restricción de Dominio (Fuera de Tabla)</p>
                 <div class="overflow-x-auto w-full mb-4">
                     <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
-                        <thead class="bg-slate-100 dark:bg-slate-700">
-                            <tr><th>Punto</th><th class="whitespace-nowrap">Extremo</th><th class="whitespace-nowrap">Res</th></tr>
+                        <thead class="bg-red-50 dark:bg-red-900/30">
+                            <tr><th>Valor Buscado</th><th>Límite de Tabla</th><th>Res. Extrapolado</th></tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-slate-100 dark:border-slate-700">
-                                <td class="font-semibold text-slate-500">Izq.</td>
-                                <td>${lo.v.toFixed(4)}</td><td>${lo.a.toPrecision(4)}</td>
-                            </tr>
-                            <tr class="bg-teal-50/50 dark:bg-teal-900/20 font-semibold text-teal-700 dark:text-teal-400">
-                                <td>Buscado</td>
-                                <td>${targetVal.toFixed(4)}</td><td>${val.toPrecision(4)}</td>
-                            </tr>
-                            <tr>
-                                <td class="font-semibold text-slate-500">Der.</td>
-                                <td>${hi.v.toFixed(4)}</td><td>${hi.a.toPrecision(4)}</td>
+                            <tr class="bg-red-50/50 dark:bg-red-900/20 font-semibold text-red-700 dark:text-red-400">
+                                <td>${targetVal.toFixed(4)}</td>
+                                <td>${res.outOfBounds === 'below' ? '< ' : '> '}${res.boundObj.v.toFixed(4)}</td>
+                                <td>≈ ${res.limitApproaches}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Cálculo con valores sustituidos</p>
-                <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal"></div>
+                <div class="text-sm text-center mb-4 bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 text-slate-500 italic">
+                    <strong>Error de Dominio:</strong> El valor ingresado está fuera de los límites numéricos cubiertos por la tabla. No aplica Método de Interpolación Lineal. En su lugar, el límite tiende lógicamente a <strong>${res.limitApproaches}</strong>.
+                </div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Límite asintótico</p>
+                <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal mb-2"></div>
             </div>
         `;
         bdEl.innerHTML = tableHtml;
         const formulaEl = document.getElementById(bdId + '_formula')!;
-        renderKaTeXInto(formulaEl, `\\begin{aligned} ${label} &= ${lo.a.toPrecision(4)} + \\dfrac{${targetVal.toFixed(4)} - ${lo.v.toFixed(4)}}{${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}} \\cdot (${hi.a.toPrecision(4)} - ${lo.a.toPrecision(4)}) \\\\ &\\approx ${val.toPrecision(4)} \\end{aligned}`, true);
+        renderKaTeXInto(formulaEl, `\\begin{aligned} \\text{Dado que } x = ${targetVal} ${res.outOfBounds === 'below' ? '<' : '>'} ${res.boundObj.v.toFixed(4)} \\\\ \\implies ${label} ${signVal} ${res.boundObj.a} \\implies ${label} \\approx ${res.limitApproaches} \\end{aligned}`, true);
+        return;
     }
+
+    const { val, lo, hi, exact, approxGl, isClamped, rawVal } = res;
+    renderKaTeXInto(resEl, `${label} \\approx ${val.toPrecision(4)}`, false);
+    
+    let breakdownBody = '';
+    let calcFormula = '';
+    
+    if (exact) {
+        breakdownBody = `
+            <tr class="bg-emerald-50/50 dark:bg-emerald-900/20 font-semibold text-emerald-700 dark:text-emerald-400">
+                <td colspan="2">Punto Exacto (Sin Regla de 3)</td>
+                <td>${val.toFixed(4)}</td>
+            </tr>
+        `;
+        calcFormula = `\\begin{aligned} ${label} &= \\text{Valor extraído directamente} \\\\ &\\approx ${val.toPrecision(4)} \\end{aligned}`;
+    } else {
+        const rows = [
+            { label: 'Ref. 1', v: lo.v, a: lo.a, isTarget: false },
+            { label: 'Buscado', v: targetVal, a: Number(rawVal.toPrecision(4)), isTarget: true },
+            { label: 'Ref. 2', v: hi.v, a: hi.a, isTarget: false }
+        ];
+        rows.sort((A, B) => A.v - B.v);
+
+        breakdownBody = rows.map((r, i) => {
+            const isLast = i === rows.length - 1;
+            const trClass = r.isTarget 
+                ? 'bg-indigo-50/50 dark:bg-indigo-900/20 font-semibold text-indigo-700 dark:text-indigo-400' 
+                : (isLast ? '' : 'border-b border-slate-100 dark:border-slate-700');
+            const tdLabelClass = r.isTarget ? '' : 'font-semibold text-slate-500';
+            const displayV = r.isTarget ? targetVal : r.v.toFixed(4);
+            const displayA = r.isTarget ? rawVal.toPrecision(4) : r.a;
+            
+            return `
+                <tr class="${trClass}">
+                    <td class="${tdLabelClass}">${r.label}</td>
+                    <td>${displayV}</td><td>${displayA}</td>
+                </tr>
+            `;
+        }).join('');
+        
+        calcFormula = `\\begin{aligned} ${label} &= ${lo.a} + \\dfrac{${targetVal} - ${lo.v.toFixed(4)}}{${hi.v.toFixed(4)} - ${lo.v.toFixed(4)}} \\cdot (${hi.a} - ${lo.a}) \\\\ &\\approx ${rawVal.toPrecision(4)} \\end{aligned}`;
+    }
+
+    let lupaHtml = '';
+    if (currentTable.meta?.columns) {
+        lupaHtml = buildMiniLupaTableInverse(currentTable, approxGl, lo.a, exact ? lo.a : hi.a, targetVal);
+    }
+
+    const tableHtml = `
+        <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 w-full text-left">
+            ${lupaHtml}
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Desglose Regla de Tres ${exact ? '(Punto Exacto)' : ''}</p>
+            <div class="overflow-x-auto w-full mb-4">
+                <table class="breakdown-table w-full text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-center">
+                    <thead class="${exact ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-slate-100 dark:bg-slate-700'}">
+                        <tr><th>Punto</th><th>Valor en tabla</th><th>α / p</th></tr>
+                    </thead>
+                    <tbody>
+                        ${breakdownBody}
+                    </tbody>
+                </table>
+            </div>
+            ${exact ? `
+            <div class="text-sm text-center mb-4 bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 text-slate-500 italic">
+                El valor coincide con un punto exacto en la tabla, no requiere interpolación. (gl ≈ ${approxGl})
+            </div>` : `
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-left">Cálculo con Regla de 3</p>`}
+            <div id="${bdId}_formula" class="text-sm text-center bg-white dark:bg-slate-900 p-3 rounded border border-slate-200 dark:border-slate-700 overflow-x-auto whitespace-normal break-words sm:break-normal mb-2"></div>
+            ${isClamped ? `
+            <div class="mt-2 p-2 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-center text-xs">
+                <strong>Aviso:</strong> El cálculo (${rawVal.toPrecision(4)}) superó los límites válidos de probabilidad. El resultado se ha acotado metodológicamente a [0, 1].
+            </div>
+            ` : ''}
+        </div>
+    `;
+    bdEl.innerHTML = tableHtml;
+    const formulaEl = document.getElementById(bdId + '_formula')!;
+    renderKaTeXInto(formulaEl, calcFormula, true);
 }
+
 function interpolateTInverse(): void {
     const gl = parseFloat((document.getElementById('inputTInvGl') as HTMLInputElement).value);
     const t = parseFloat((document.getElementById('inputTInvT') as HTMLInputElement).value);
     if (isNaN(gl) || isNaN(t)) return;
+    showFormulaHint('resInvInterpT', `P(T_{${gl}} > ${Math.abs(t)}) = {\\color{red}\\alpha} \\quad \\small\\text{— encontrar lo rojo}`);
     const result = interpolateInverseRow(currentTable, gl, Math.abs(t));
     showInvInterpResult('resInvInterpT', 'breakdownInvInterpT', '\\alpha', Math.abs(t), result);
 }
@@ -1839,6 +2486,7 @@ function interpolateChiInverse(): void {
     const gl = parseFloat((document.getElementById('inputChiInvGl') as HTMLInputElement).value);
     const chi = parseFloat((document.getElementById('inputChiInvChi') as HTMLInputElement).value);
     if (isNaN(gl) || isNaN(chi)) return;
+    showFormulaHint('resInvInterpChi', `P(\\chi^2_{${gl}} > ${chi}) = {\\color{red}\\alpha} \\quad \\small\\text{— encontrar lo rojo}`);
     const result = interpolateInverseRow(currentTable, gl, chi);
     showInvInterpResult('resInvInterpChi', 'breakdownInvInterpChi', '\\alpha', chi, result);
 }
@@ -1847,6 +2495,7 @@ function interpolateGammaInverse(): void {
     const alpha = parseFloat((document.getElementById('inputGammaInvAlpha') as HTMLInputElement).value);
     const x = parseFloat((document.getElementById('inputGammaInvX') as HTMLInputElement).value);
     if (isNaN(alpha) || isNaN(x)) return;
+    showFormulaHint('resInvInterpGamma', `P(X_{\\alpha=${alpha}} \\le ${x}) = {\\color{red}p} \\quad \\small\\text{— encontrar lo rojo}`);
     const result = interpolateInverseRow(currentTable, alpha, x);
     showInvInterpResult('resInvInterpGamma', 'breakdownInvInterpGamma', 'p', x, result);
 }

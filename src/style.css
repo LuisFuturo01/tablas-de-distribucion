@@ -1078,6 +1078,184 @@ th {
     }
 }
 
+/* =============================================
+   FORMULA HINT — pre-interpolation equation
+   ============================================= */
+.formula-hint {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+    border-radius: 0.4rem;
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.5) 0%, rgba(254, 226, 226, 0.3) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-size: 0.85rem;
+}
+.dark .formula-hint {
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.15) 0%, rgba(153, 27, 27, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+.formula-hint .katex {
+    font-size: 0.9em;
+}
+
+/* =============================================
+   MINI-TABLE "LUPA" (magnifying glass) — interpolation
+   ============================================= */
+.mini-lupa-wrapper {
+    position: relative;
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.75rem 0.6rem 0.75rem;
+    border: 1.5px dashed rgba(99, 102, 241, 0.45);
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, rgba(238, 242, 255, 0.5) 0%, rgba(224, 231, 255, 0.3) 100%);
+    overflow-x: auto;
+}
+.dark .mini-lupa-wrapper {
+    border-color: rgba(99, 102, 241, 0.35);
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.35) 0%, rgba(30, 41, 59, 0.4) 100%);
+}
+
+.mini-lupa-header {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6366f1;
+    margin-bottom: 0.4rem;
+}
+.dark .mini-lupa-header {
+    color: #a5b4fc;
+}
+.mini-lupa-icon {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.mini-lupa-table {
+    border-collapse: collapse;
+    font-size: 0.65rem;
+    width: auto;
+    font-family: 'Inter', ui-monospace, monospace;
+    margin: 0 auto;
+}
+.mini-lupa-table th,
+.mini-lupa-table td {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    padding: 0.15rem 0.4rem;
+    text-align: center;
+    white-space: nowrap;
+    min-width: 0 !important;
+    width: auto !important;
+    line-height: 1.35;
+    transition: all 0.15s ease;
+}
+
+/* Header cells */
+.mini-lupa-table thead th {
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.6rem;
+}
+.dark .mini-lupa-table thead th {
+    background: #1e293b;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+/* Row header */
+.mini-lupa-table tbody th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    font-size: 0.6rem;
+}
+.dark .mini-lupa-table tbody th {
+    background: #0f172a;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+/* Normal data cells */
+.mini-lupa-table tbody td {
+    background: rgba(255, 255, 255, 0.8);
+    color: #64748b;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+.dark .mini-lupa-table tbody td {
+    background: rgba(15, 23, 42, 0.6);
+    color: #64748b;
+    border-color: #334155;
+}
+
+/* Highlighted column header */
+.mini-lupa-table .lupa-col-hl {
+    background: rgba(99, 102, 241, 0.15) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+}
+.dark .mini-lupa-table .lupa-col-hl {
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #a5b4fc !important;
+}
+
+/* Highlighted row header */
+.mini-lupa-table .lupa-row-hl {
+    background: rgba(99, 102, 241, 0.12) !important;
+    color: #4338ca !important;
+    font-weight: 700 !important;
+}
+.dark .mini-lupa-table .lupa-row-hl {
+    background: rgba(99, 102, 241, 0.18) !important;
+    color: #c7d2fe !important;
+}
+
+/* The "found" cell at intersection — glowing */
+.mini-lupa-table .lupa-cell-found {
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #3730a3 !important;
+    font-weight: 700 !important;
+    box-shadow: inset 0 0 0 1.5px #6366f1;
+    border-radius: 2px;
+}
+.dark .mini-lupa-table .lupa-cell-found {
+    background: rgba(99, 102, 241, 0.3) !important;
+    color: #e0e7ff !important;
+    box-shadow: inset 0 0 0 1.5px #818cf8;
+}
+
+/* The "searched" row — between ant/sig */
+.mini-lupa-table .lupa-row-searched th {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #92400e !important;
+    font-weight: 700 !important;
+    font-style: italic;
+    border-left: 2px solid #f59e0b !important;
+}
+.dark .mini-lupa-table .lupa-row-searched th {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fcd34d !important;
+    border-left-color: #f59e0b !important;
+}
+.mini-lupa-table .lupa-row-searched td {
+    background: rgba(245, 158, 11, 0.08) !important;
+    color: #78350f !important;
+    font-weight: 600 !important;
+}
+.dark .mini-lupa-table .lupa-row-searched td {
+    background: rgba(245, 158, 11, 0.06) !important;
+    color: #fde68a !important;
+}
+
+/* Dim non-relevant cells slightly */
+.mini-lupa-table .lupa-dim {
+    opacity: 0.45;
+}
+
 /* Properties Drawer Animations */
 #propsOverlay.active {
     opacity: 1;
