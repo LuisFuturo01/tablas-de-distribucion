@@ -367,11 +367,13 @@
     </div>
 
     <!-- Image Lightbox Modal -->
-    <div id="lightboxOverlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[1000] hidden flex-col items-center justify-center opacity-0 transition-opacity duration-300 px-4">
-        <button id="closeLightbox" class="absolute top-6 right-6 text-white hover:text-slate-300 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/50 transition-colors z-[1010]">
+    <div id="lightboxOverlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[1000] hidden opacity-0 transition-opacity duration-300">
+        <button id="closeLightbox" class="fixed top-6 right-6 text-white hover:text-slate-300 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/50 transition-colors z-[1010]">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-        <img id="lightboxImg" src="" alt="Vista ampliada" class="w-[70vw] h-auto object-contain m-auto rounded-xl shadow-2xl scale-95 transition-transform duration-300">
+        <div id="lightboxScroll" class="w-full h-full flex items-center justify-center p-4 overflow-auto">
+            <img id="lightboxImg" src="" alt="Vista ampliada" class="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl transition-all duration-300 cursor-zoom-in">
+        </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
 </body>

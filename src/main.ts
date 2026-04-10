@@ -1155,6 +1155,55 @@ function setupEvents(): void {
     document.getElementById('btnCloseProps')?.addEventListener('click', closePropsDrawer);
     document.getElementById('propsOverlay')?.addEventListener('click', closePropsDrawer);
     
+    document.getElementById('btnInvInterpT')?.addEventListener('click', interpolateTInverse);
+    document.getElementById('btnInvInterpChi')?.addEventListener('click', interpolateChiInverse);
+    document.getElementById('btnInvInterpGamma')?.addEventListener('click', interpolateGammaInverse);
+
+    // Lightbox
+    let isZoomed = false;
+    document.querySelectorAll('#imageContainer img').forEach(img => {
+        img.addEventListener('click', () => {
+            const lightbox = document.getElementById('lightboxOverlay');
+            const lightboxImg = document.getElementById('lightboxImg');
+            if(lightbox && lightboxImg) {
+                isZoomed = false;
+                lightboxImg.classList.add('max-w-[90vw]', 'max-h-[90vh]', 'cursor-zoom-in');
+                lightboxImg.classList.remove('max-w-none', 'max-h-none', 'cursor-zoom-out', 'w-[200vw]', 'md:w-[150vw]');
+                lightboxImg.setAttribute('src', img.getAttribute('src') || '');
+                lightbox.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    lightbox.classList.remove('opacity-0');
+                });
+            }
+        });
+    });
+    
+    document.getElementById('closeLightbox')?.addEventListener('click', closeLightbox);
+    
+    const lightboxScroll = document.getElementById('lightboxScroll');
+    if (lightboxScroll) {
+        lightboxScroll.addEventListener('click', (e) => {
+            if (e.target === lightboxScroll) {
+                closeLightbox();
+            }
+        });
+    }
+
+    const lightboxImg = document.getElementById('lightboxImg');
+    if (lightboxImg) {
+        lightboxImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isZoomed = !isZoomed;
+            if (isZoomed) {
+                lightboxImg.classList.remove('max-w-[90vw]', 'max-h-[90vh]', 'cursor-zoom-in');
+                lightboxImg.classList.add('max-w-none', 'max-h-none', 'cursor-zoom-out', 'w-[200vw]', 'md:w-[150vw]');
+            } else {
+                lightboxImg.classList.add('max-w-[90vw]', 'max-h-[90vh]', 'cursor-zoom-in');
+                lightboxImg.classList.remove('max-w-none', 'max-h-none', 'cursor-zoom-out', 'w-[200vw]', 'md:w-[150vw]');
+            }
+        });
+    }
+
     setupLiveHints();
 
     const darkBtn = document.getElementById('toggleDarkMode')!;
@@ -1553,11 +1602,11 @@ function findCols(table: DistTable, targetAlpha: number): { exact: boolean; exac
     return { exact: false, exactIdx: -1, loIdx: lo.i, hiIdx: hi.i, aLo: lo.v, aHi: hi.v };
 }
 
-function interpolateBilinear(table: DistTable, targetRow: number, targetAlpha: number, colsInfo: ReturnType<typeof findCols>) {
+function interpolateBilinear(table: DistTable, targetRow: number, targetAlpha: number, colsInfo: ReturnType<typeof findCols>): { val: number, resLo: NonNullable<ReturnType<typeof interpolateBetweenRows>>, resHi: NonNullable<ReturnType<typeof interpolateBetweenRows>>, aLo: number, aHi: number, vLo: number, vHi: number } | null {
     const resLo = interpolateBetweenRows(table, targetRow, colsInfo.loIdx);
     const resHi = interpolateBetweenRows(table, targetRow, colsInfo.hiIdx);
     if (!resLo || !resHi) return null;
-    if (colsInfo.loIdx === colsInfo.hiIdx) return resLo;
+    if (colsInfo.loIdx === colsInfo.hiIdx) return { val: resLo.val, resLo, resHi, aLo: colsInfo.aLo, aHi: colsInfo.aHi, vLo: resLo.val, vHi: resLo.val };
     
     const vLo = resLo.val;
     const vHi = resHi.val;
@@ -1964,6 +2013,14 @@ function setupLiveHints(): void {
     });
 }
 
+function closeLightbox() {
+    const lightbox = document.getElementById('lightboxOverlay');
+    if(lightbox) {
+        lightbox.classList.add('opacity-0');
+        setTimeout(() => lightbox.classList.add('hidden'), 300);
+    }
+}
+
 function showBilinearResult(resId: string, bdId: string, label: string, targetRow: number, targetAlpha: number, result: ReturnType<typeof interpolateBilinear>): void {
     const resEl = document.getElementById(resId)!;
     const bdEl = document.getElementById(bdId)!;
@@ -2144,7 +2201,7 @@ function li(items: string[]): string {
         if (k && k.renderToString) {
             text = text.replace(/\$(.*?)\$/g, (match, tex) => {
                 try {
-                    return k.renderToString(tex, { displayMode: false, throwOnError: false });
+                    return k.renderToString!(tex, { displayMode: false, throwOnError: false });
                 } catch {
                     return match;
                 }
@@ -2256,47 +2313,12 @@ function propsGamma(): string {
     ]));
 }
 
-    document.getElementById('btnInvInterpT')?.addEventListener('click', interpolateTInverse);
-    document.getElementById('btnInvInterpChi')?.addEventListener('click', interpolateChiInverse);
-    document.getElementById('btnInvInterpGamma')?.addEventListener('click', interpolateGammaInverse);
-    
-    // Lightbox
-    document.querySelectorAll('#imageContainer img').forEach(img => {
-        img.addEventListener('click', () => {
-            const lightbox = document.getElementById('lightboxOverlay');
-            const lightboxImg = document.getElementById('lightboxImg');
-            if(lightbox && lightboxImg) {
-                lightboxImg.setAttribute('src', img.getAttribute('src') || '');
-                lightbox.classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    lightbox.classList.remove('opacity-0');
-                    lightboxImg.classList.remove('scale-95');
-                });
-            }
-        });
-    });
-    document.getElementById('closeLightbox')?.addEventListener('click', closeLightbox);
-    document.getElementById('lightboxOverlay')?.addEventListener('click', (e) => {
-        if(e.target === e.currentTarget) closeLightbox();
-    });
-
-
-
-
 /* =============================================
    Interpolación Inversa para tablas (columnas)
    ============================================= */
-function closeLightbox() {
-    const lightbox = document.getElementById('lightboxOverlay');
-    const lightboxImg = document.getElementById('lightboxImg');
-    if(lightbox && lightboxImg) {
-        lightbox.classList.add('opacity-0');
-        lightboxImg.classList.add('scale-95');
-        setTimeout(() => lightbox.classList.add('hidden'), 300);
-    }
-}
 
-function interpolateInverseRow(table: DistTable, targetRow: number, targetVal: number): { val: number; lo: { a: number; v: number }; hi: { a: number; v: number }; exact: boolean; approxGl: string } | null {
+
+function interpolateInverseRow(table: DistTable, targetRow: number, targetVal: number): { val: number; lo: { a: number; v: number }; hi: { a: number; v: number }; exact: boolean; approxGl: string; isClamped?: boolean; rawVal?: number; outOfBounds?: string; limitApproaches?: number; boundObj?: any } | null {
     const rows = getSortedRowKeys(table);
     if (rows.length === 0) return null;
     let rKey = rows[0].key;
