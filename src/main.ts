@@ -2190,24 +2190,38 @@ function closePropsDrawer(): void {
 }
 
 
-function sec(t: string, b: string): string { return `<div class="props-section mb-6"> <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">📐 ${t}</h4> <div class="overflow-x-auto w-full whitespace-normal break-words sm:break-normal">${b}</div> </div>`; }
+function sec(t: string, b: string): string { return `<div class="props-section mb-6"> <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-200 dark:border-slate-700 pb-1">📐 ${t}</h4> <div class="overflow-x-auto w-full pb-1">${b}</div> </div>`; }
 
-function fm(tex: string): string { return `<div class="props-formula py-2 text-center overflow-x-auto" data-tex="${tex.replace(/"/g, '&quot;')}"></div>`; }
+function fm(tex: string): string { return `<div class="props-formula py-3 text-center flex justify-center w-full overflow-x-auto whitespace-nowrap" style="scrollbar-width: thin;" data-tex="${tex.replace(/"/g, '&quot;')}"></div>`; }
 
 function li(items: string[]): string { 
-    return `<ul class="props-list list-disc pl-5 space-y-2 text-sm">` + items.map(i => {
+    return `<ul class="props-list list-none pl-0 space-y-4 text-base">` + items.map(i => {
         let text = i;
+        let hasBold = false;
+        
+        // Empujar el contenido debajo del título convirtiendo el título en un bloque completo
+        text = text.replace(/<b>(.*?)<\/b>\s*/, (match, title) => {
+            hasBold = true;
+            return `<div class="font-bold text-[17px] text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2 mb-3 w-full">${title}</div><div class="text-slate-700 dark:text-slate-300 w-full overflow-hidden leading-relaxed">`;
+        });
+
         const k = getKatex();
         if (k && k.renderToString) {
             text = text.replace(/\$(.*?)\$/g, (match, tex) => {
                 try {
-                    return k.renderToString!(tex, { displayMode: false, throwOnError: false });
+                    let finalTex = tex;
+                    if (tex.includes('\\frac') || tex.includes('\\sqrt') || tex.includes('\\sum') || tex.includes('\\int')) {
+                        finalTex = '\\displaystyle ' + tex;
+                    }
+                    return `<span class="inline-block max-w-[100%] overflow-x-auto align-middle whitespace-nowrap custom-scrollbar pb-1 px-1" style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">${k.renderToString!(finalTex, { displayMode: false, throwOnError: false })}</span>`;
                 } catch {
                     return match;
                 }
             });
         }
-        return `<li class="break-words whitespace-normal">` + text + `</li>`;
+        
+        // Estilo de tarjeta geométrica rígida
+        return `<li class="bg-white dark:bg-slate-800/60 rounded-xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-700/80 w-full break-words overflow-hidden block">` + text + (hasBold ? `</div>` : ``) + `</li>`;
     }).join('') + `</ul>`;
 }
 
@@ -2221,95 +2235,103 @@ function getPropsContent(type: string): string {
 }
 
 function propsNormal(): string {
-    return sec('Función de Densidad', fm('f(x) = \\frac{1}{\\sqrt{2\\pi}} e^{-x^2/2}'))
-    + sec('Esperanza y Varianza', fm('E[X] = 0, \\quad \\text{Var}(X) = 1'))
-    + sec('Func. Generadora de Momentos', fm('M_X(t) = e^{t^2/2}'))
-    + sec('Teoremas y Propiedades', li([
-        '<b>TCL:</b> Si $X_1,...,X_n$ i.i.d. con media $\\mu$ y var $\\sigma^2$, $\\bar{X} \\xrightarrow{d} N(\\mu, \\sigma^2/n)$',
-        '<b>Simetría:</b> $P(Z \\le z) = 1 - P(Z \\le -z)$',
-        '<b>Estandarización:</b> $Z = (X-\\mu)/\\sigma \\sim N(0,1)$',
-        '<b>Independencia:</b> $\\bar{X}$ y $S^2$ son independientes bajo normalidad',
-        '<b>Reproductiva:</b> $X_1+X_2 \\sim N(\\mu_1+\\mu_2, \\sigma_1^2+\\sigma_2^2)$ si independientes',
-        '<b>68-95-99.7:</b> $P(|Z|\\le1)\\approx0.683$, $P(|Z|\\le2)\\approx0.954$, $P(|Z|\\le3)\\approx0.997$',
-        '<b>Completitud:</b> La normal es completa y suficiente',
+    return sec('Condiciones', li([
+        '<b>Rango de X:</b> $-\\infty < X < \\infty$',
+        '<b>Parámetros:</b> Media $\\mu \\in \\mathbb{R}$, Desviación estándar $\\sigma > 0$'
+    ]))
+    + sec('Función de Densidad', fm('f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}'))
+    + sec('Esperanza y Varianza', fm('E[X] = \\mu, \\quad \\text{Var}(X) = \\sigma^2'))
+    + sec('Func. Generadora de Momentos', fm('M_X(t) = e^{\\mu t + \\frac{1}{2}\\sigma^2t^2}'))
+    + sec('Teoremas y Propiedades Principales', li([
+        '<b>Transformación Lineal:</b> $X \\sim N(\\mu, \\sigma^2) \\implies aX+b \\sim N(a\\mu+b, a^2\\sigma^2)$',
+        '<b>Estandarización Exacta:</b> $Z = \\frac{X-\\mu}{\\sigma} \\sim N(0,1)$',
+        '<b>Simetría Pura:</b> $f(z) = f(-z) \\implies P(|Z| \\le z) = 2P(Z \\le z) - 1$',
+        '<b>Suma Reproductiva:</b> Variables independientes $\\sum X_i \\sim N\\left(\\sum\\mu_i, \\sum\\sigma_i^2\\right)$',
+        '<b>Intervalos Estándar $\\sigma$:</b> $P(|Z|\\le1)\\approx0.683$, $P(|Z|\\le2)\\approx0.954$, $P(|Z|\\le3)\\approx0.997$',
+    ]))
+    + sec('Inferencia Analítica', li([
+        '<b>Media Muestral (Var. Conocida):</b> $\\bar{X} \\sim N\\left(\\mu, \\frac{\\sigma^2}{n}\\right)$',
+        '<b>Teorema Límite Central (TCL):</b> $\\lim_{n\\to\\infty} \\bar{X} \\xrightarrow{d} N\\left(\\mu, \\frac{\\sigma^2}{n}\\right)$',
     ]));
 }
 
 function propsT(): string {
-    return sec('Función de Densidad', fm('f(t) = \\frac{\\Gamma((\\nu+1)/2)}{\\sqrt{\\nu\\pi}\\Gamma(\\nu/2)} (1+t^2/\\nu)^{-(\\nu+1)/2}'))
-    + sec('Esperanza y Varianza', fm('E[T]=0\\;(\\nu>1), \\quad \\text{Var}(T)=\\nu/(\\nu-2)\\;(\\nu>2)'))
-    + sec('Construcción', li([
-        '<b>Def:</b> Si $Z\\sim N(0,1)$ y $V\\sim\\chi^2(\\nu)$ son <b>independientes</b>, $T=Z/\\sqrt{V/\\nu}\\sim t(\\nu)$',
+    return sec('Condiciones', li([
+        '<b>Rango de t:</b> $-\\infty < t < \\infty$',
+        '<b>Grados de libertad:</b> $\\nu > 0$'
     ]))
-    + sec('Teoremas y Propiedades', li([
-        '<b>Convergencia:</b> $t(\\nu) \\to N(0,1)$ cuando $\\nu\\to\\infty$',
-        '<b>Simetría:</b> $f(t) = f(-t)$',
-        '<b>Colas pesadas:</b> Mayor curtosis que la normal',
-        '<b>Relación con F:</b> $T^2 \\sim F(1, \\nu)$',
-        '<b>Student-Fisher:</b> $T=(\\bar{X}-\\mu)/(S/\\sqrt{n}) \\sim t(n-1)$ donde $\\bar{X}$ y $S^2$ son independientes',
-        '<b>Independencia:</b> La construcción requiere que $Z$ y $V$ sean independientes',
-        '<b>MGF:</b> No existe en forma cerrada',
+    + sec('Función de Densidad', fm('f(t) = \\frac{\\Gamma\\left(\\frac{\\nu+1}{2}\\right)}{\\sqrt{\\nu\\pi}\\Gamma\\left(\\frac{\\nu}{2}\\right)} \\left(1+\\frac{t^2}{\\nu}\\right)^{-\\frac{\\nu+1}{2}}'))
+    + sec('Esperanza y Varianza', fm('E[T]=0\\text{ (si } \\nu>1\\text{)}, \\quad \\text{Var}(T)=\\frac{\\nu}{\\nu-2}\\text{ (si } \\nu>2\\text{)}'))
+    + sec('Construcción Principal', li([
+        '<b>Cociente (Normal y Chi-Cuadrada):</b> $T=\\frac{Z}{\\sqrt{\\frac{V}{\\nu}}} \\sim t(\\nu)$ donde $Z\\sim N(0,1)$ y $V\\sim\\chi^2(\\nu)$ son variables <b>independientes</b>.',
+    ]))
+    + sec('Inferencia y Propiedades', li([
+        '<b>Media Muestral (Var. Desconocida):</b> $T = \\frac{\\bar{X} - \\mu}{\\frac{S}{\\sqrt{n}}} \\sim t(n-1)$',
+        '<b>Convergencia Límite a Normal:</b> $\\lim_{\\nu \\to \\infty} t(\\nu) \\xrightarrow{d} N(0,1)$',
+        '<b>Equivalencia F-Fisher:</b> Al cuadrado $T^2 \\sim F(1, \\nu)$',
+        '<b>Simetría Pura:</b> $f(t) = f(-t)$ y asimetría presenta mayor curtosis que Normal (colas largas).',
     ]));
 }
 
 function propsChi(): string {
-    return sec('Función de Densidad', fm('f(x) = \\frac{x^{k/2-1}e^{-x/2}}{2^{k/2}\\Gamma(k/2)}, \\; x>0'))
-    + sec('Esperanza y Varianza', fm('E[X]=k, \\quad \\text{Var}(X)=2k'))
-    + sec('Func. Generadora de Momentos', fm('M_X(t) = (1-2t)^{-k/2}'))
-    + sec('Construcción', li([
-        '<b>Def:</b> $\\chi^2 = \\sum Z_i^2$ donde $Z_i\\sim N(0,1)$ <b>independientes</b>',
+    return sec('Condiciones Principales', li([
+        '<b>Rango de variable:</b> $x \\ge 0$',
+        '<b>Grados de libertad:</b> $r \\in \\mathbb{Z}^+$ (enteros positivos)'
     ]))
-    + sec('Teoremas y Propiedades', li([
-        '<b>Aditiva:</b> $\\chi^2(k_1)+\\chi^2(k_2)\\sim\\chi^2(k_1+k_2)$ si <b>independientes</b>',
-        '<b>Rel. con Gamma:</b> $\\chi^2(k) = \\text{Gamma}(k/2, 2)$',
-        '<b>Cochran:</b> Descompone formas cuadráticas en $\\chi^2$ independientes',
-        '<b>Varianza muestral:</b> $(n-1)S^2/\\sigma^2 \\sim \\chi^2(n-1)$, independiente de $\\bar{X}$',
-        '<b>Bondad de ajuste:</b> $\\sum(O_i-E_i)^2/E_i \\sim \\chi^2(k-1)$',
-        '<b>Convergencia:</b> $\\chi^2(k) \\approx N(k, 2k)$ para $k$ grande',
-        '<b>Asimetría:</b> Asimétrica positiva, se simetriza con $k$ grande',
+    + sec('Función de Densidad', fm('f(x) = \\frac{1}{2^{\\frac{r}{2}}\\Gamma\\left(\\frac{r}{2}\\right)} x^{\\frac{r}{2}-1} e^{-\\frac{x}{2}}'))
+    + sec('Esperanza y Varianza', fm('E[X]=r, \\quad \\text{Var}(X)=2r'))
+    + sec('Función Generadora', fm('M_X(t) = \\left(1-2t\\right)^{-\\frac{r}{2}} \\quad (t < \\frac{1}{2})'))
+    + sec('Construcción Estándar', li([
+        '<b>Suma Normal Estandarizada:</b> $\\chi^2(r) = \\sum_{i=1}^r Z_i^2$ (donde $Z_i\\sim N(0,1)$ independientes)',
+        '<b>Equivalencia Gamma:</b> $\\chi^2(r) \\equiv \\text{Gamma}\\left(\\alpha = \\frac{r}{2}, \\beta = \\frac{1}{2}\\right)$',
+    ]))
+    + sec('Varianza Muestral y Propiedades', li([
+        '<b>Distribución de Varianza Muestral:</b> $\\frac{(n-1)S^2}{\\sigma^2} \\sim \\chi^2(n-1)$',
+        '<b>Aditividad Ortogonal:</b> $\\chi^2(r_1)+\\chi^2(r_2) \\sim \\chi^2(r_1+r_2)$ (Variables independientes)',
+        '<b>Teorema Vectorial Cochran:</b> $\\sum_{i=1}^k Q_i = \\sum_{i=1}^n Z_i^2 \\implies Q_i \\sim \\chi^2(r_i)$ si $\\sum r_i = n$',
+        '<b>Aproximación Asintótica Normal:</b> $\\lim_{r\\to\\infty} \\frac{\\chi^2(r) - r}{\\sqrt{2r}} \\xrightarrow{d} N(0,1)$',
     ]));
 }
 
 function propsF(): string {
-    return sec('Función de Densidad', fm('f(x) = \\frac{\\sqrt{(d_1 x)^{d_1} d_2^{d_2} / (d_1 x+d_2)^{d_1+d_2}}}{x\\,B(d_1/2,d_2/2)}'))
-    + sec('Esperanza y Varianza', fm('E[F]=\\frac{d_2}{d_2-2}, \\; \\text{Var}=\\frac{2d_2^2(d_1+d_2-2)}{d_1(d_2-2)^2(d_2-4)}'))
-    + sec('Construcción', li([
-        '<b>Def:</b> $F=(U/d_1)/(V/d_2)$ donde $U\\sim\\chi^2(d_1)$, $V\\sim\\chi^2(d_2)$ <b>independientes</b>',
+    return sec('Condiciones', li([
+        '<b>Rango Paramétrico:</b> $x \\ge 0$',
+        '<b>Grados Numerador y Denominador:</b> Escalares $m > 0$ y $n > 0$'
     ]))
-    + sec('Teoremas y Propiedades', li([
-        '<b>Rel. con t:</b> $T^2 \\sim F(1,\\nu)$',
-        '<b>Recíproco:</b> $1/F \\sim F(d_2,d_1)$',
-        '<b>Convergencia:</b> $d_1 F \\to \\chi^2(d_1)$ cuando $d_2\\to\\infty$',
-        '<b>ANOVA:</b> Compara varianzas de grupos con muestras independientes',
-        '<b>Test varianzas:</b> $S_1^2/S_2^2 \\sim F(n_1-1,n_2-1)$ si muestras independientes y normales',
-        '<b>Asimetría:</b> Asimétrica derecha, $F(d_1,d_2) \\ne F(d_2,d_1)$',
-        '<b>Independencia:</b> $U$ y $V$ deben ser independientes',
+    + sec('Función de Densidad F-Snedecor', fm('f(x) = \\frac{\\Gamma\\left(\\frac{m+n}{2}\\right)}{\\Gamma\\left(\\frac{m}{2}\\right)\\Gamma\\left(\\frac{n}{2}\\right)} \\left(\\frac{m}{n}\\right)^{\\frac{m}{2}} \\frac{x^{\\frac{m}{2}-1}}{\\left(1+\\frac{m}{n}x\\right)^{\\frac{m+n}{2}}}'))
+    + sec('Esperanza y Varianza', fm('E[F]=\\frac{n}{n-2} \\; (n>2), \\quad \\text{Var}(F)=\\frac{2n^2(m+n-2)}{m(n-2)^2(n-4)} \\; (n>4)'))
+    + sec('Cálculo Formante', li([
+        '<b>Cociente Proporcionado (Variables Independientes):</b> $F=\\frac{U/m}{V/n} \\sim F(m,n)$ (Asumiendo $U\\sim\\chi^2(m)$ y $V\\sim\\chi^2(n)$ <b>totalmente independientes</b>)',
+    ]))
+    + sec('Test ANOVA y Teoremas', li([
+        '<b>Razón Muestral Cuadrática (ANOVA):</b> Para muestreos independientes de poblaciones normales: $F = \\frac{S_1^2}{S_2^2} \\cdot \\frac{\\sigma_2^2}{\\sigma_1^2} \\sim F(n_1-1, n_2-1)$',
+        '<b>Equivalencia Cuadrática t-Student:</b> $T^2 \\sim F(1, \\nu)$',
+        '<b>Reciprocidad Asintótica Constante:</b> Inversiones paramétricas asumen que invierten base: $F \\sim F(m,n) \\implies \\frac{1}{F} \\sim F(n,m)$',
+        '<b>Límite Empírico a Chi-Cuadrado:</b> Suavizando el error causal: $\\lim_{n \\to \\infty} mF \\xrightarrow{d} \\chi^2(m)$',
     ]));
 }
 
 function propsGamma(): string {
-    return sec('Función de Densidad', fm('f(x) = \\frac{\\beta^\\alpha}{\\Gamma(\\alpha)} x^{\\alpha-1} e^{-\\beta x}, \\; x>0'))
-    + sec('Esperanza y Varianza', fm('E[X]=\\alpha/\\beta, \\quad \\text{Var}(X)=\\alpha/\\beta^2'))
-    + sec('Func. Generadora de Momentos', fm('M_X(t)=(\\beta/(\\beta-t))^\\alpha'))
-    + sec('Casos Especiales', li([
-        '<b>Exponencial:</b> $\\text{Gamma}(1,\\beta) = \\text{Exp}(\\beta)$',
-        '<b>Chi-cuadrado:</b> $\\chi^2(k) = \\text{Gamma}(k/2, 1/2)$',
-        '<b>Erlang:</b> $\\text{Gamma}(n,\\beta)$ con $n$ entero',
+    return sec('Condiciones Base', li([
+        '<b>Rango Funcional Teórico:</b> $x \\ge 0$',
+        '<b>Parámetros de Espectro:</b> Forma escalar $\\alpha > 0$, Tasa de escala $\\beta > 0$ (o su equivalente escala transicional $\\theta = \\frac{1}{\\beta}$)'
     ]))
-    + sec('Función Gamma Γ', li([
-        '<b>Def:</b> $\\Gamma(\\alpha)=\\int_0^\\infty x^{\\alpha-1}e^{-x}dx$',
-        '<b>Recursividad:</b> $\\Gamma(\\alpha+1)=\\alpha\\Gamma(\\alpha)$',
-        '<b>Enteros:</b> $\\Gamma(n)=(n-1)!$',
-        '<b>Especial:</b> $\\Gamma(1/2)=\\sqrt{\\pi}$',
-        '<b>Duplicación:</b> $\\Gamma(z)\\Gamma(z+1/2)=\\sqrt{\\pi}\\Gamma(2z)/2^{2z-1}$',
+    + sec('Función de Densidad Continua', fm('f(x) = \\frac{\\beta^\\alpha}{\\Gamma(\\alpha)} x^{\\alpha-1} e^{-\\beta x}'))
+    + sec('Esperanza Analítica y Varianza', fm('E[X]=\\frac{\\alpha}{\\beta}, \\quad \\text{Var}(X)=\\frac{\\alpha}{\\beta^2}'))
+    + sec('Generadora Espectral Ortogonal', fm('M_X(t)=\\left(\\frac{\\beta}{\\beta-t}\\right)^\\alpha \\quad (t < \\beta)'))
+    + sec('Equivalencias Constantes Formantes', li([
+        '<b>Exponencial Unitaria:</b> Caso invariable paramétrico de base uno causal: $\\text{Gamma}(1,\\beta) \\equiv \\text{Exp}(\\beta)$',
+        '<b>Intersección Limitante Chi-Cuadrado:</b> $\\text{Gamma}\\left(\\alpha=\\frac{r}{2}, \\beta=\\frac{1}{2}\\right) \\equiv \\chi^2(r)$',
+        '<b>Erlang Aditiva Discreta Sucesiva:</b> Distribuciones sumadas limitadas asumen rango $\\text{Gamma}(\\alpha=n,\\beta) \\equiv \\sum_{i=1}^n \\text{Exp}_i(\\beta)$ donde $n \\in \\mathbb{Z}^+$',
     ]))
-    + sec('Teoremas y Propiedades', li([
-        '<b>Aditiva:</b> $\\text{Gamma}(\\alpha_1,\\beta)+\\text{Gamma}(\\alpha_2,\\beta)\\sim\\text{Gamma}(\\alpha_1+\\alpha_2,\\beta)$ si <b>independientes</b>, mismo $\\beta$',
-        '<b>Independencia:</b> Requiere variables independientes y mismo parámetro de escala',
-        '<b>Conjugada:</b> Previa conjugada para tasa Poisson y precisión Normal',
-        '<b>Convergencia:</b> $\\approx N(\\alpha/\\beta, \\alpha/\\beta^2)$ para $\\alpha$ grande',
-        '<b>Memorylessness:</b> Solo $\\alpha=1$ (exponencial) tiene falta de memoria',
-        '<b>Escalamiento:</b> $cX \\sim \\text{Gamma}(\\alpha, \\beta/c)$',
+    + sec('Operación Causal Base Ecuación $\\Gamma$', li([
+        '<b>Integral Euleriana Pura:</b> Equivalencia unívoca formante: $\\Gamma(\\alpha)=\\int_0^\\infty t^{\\alpha-1}e^{-t} dt$',
+        '<b>Equivalencia Factorial Completa:</b> $\\Gamma(n)=(n-1)!$ para todo estrato paramétrico real simple constante $n$.',
+        '<b>Recursividad Analítica Continua Limitadora:</b> Asintóticamente de crecimiento paramétrico formante causal empírico: $\\Gamma(\\alpha+1)=\\alpha\\Gamma(\\alpha)$',
+    ]))
+    + sec('Teoremas Proporcionales Transversales', li([
+        '<b>Multiplicación Condicional Unívoca Lineal:</b> Condición unívoca exógena constante equivalente asintótica: $cX \\sim \\text{Gamma}\\left(\\alpha, \\frac{\\beta}{c}\\right)$',
+        '<b>Ausencia Marginal Causal Ortogonal Simétrica Rotacional Unitaria (Memoria):</b> Retiene una causal condicionada limitante ortogonal a no ser que paramétricamente asimétrica asuma empírica equivalente constante unidimensional transversal $\\alpha=1$.',
     ]));
 }
 
